@@ -1,0 +1,89 @@
+// -*- mode: jsonc -*-
+{
+    "layer": "top",
+    "output": "HDMI-A-1",
+    "position": "top",
+    "height": 36,
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+    "spacing": 0,
+    "modules-left": ["custom/niri-logo", "niri/workspaces"],
+    "modules-center": ["niri/window"],
+    "modules-right": ["cpu", "memory", "custom/sep1", "network", "pulseaudio", "custom/sep2", "clock#time", "clock#date", "custom/sep3", "custom/power"],
+
+    "custom/niri-logo": {
+        "format": "  niri",
+        "tooltip": false
+    },
+
+    "niri/workspaces": {
+        "format": "{index}"
+    },
+
+    "niri/window": {
+        "format": "  {}",
+        "max-length": 50,
+        "rewrite": {
+            "": "  desktop"
+        }
+    },
+
+    "cpu": {
+        "format": "󰻧  cpu {usage}%",
+        "tooltip": false,
+        "interval": 5
+    },
+    "memory": {
+        "format": "󰍛  ram {used:0.1f}G",
+        "interval": 5,
+        "tooltip": false
+    },
+
+    "custom/sep1": {
+        "format": "|",
+        "tooltip": false
+    },
+
+    "network": {
+        "format-ethernet": "󰈀  connected",
+        "format-wifi": "  {essid}",
+        "format-disconnected": "󰅙  offline",
+        "tooltip-format": "{ifname}\n{ipaddr}/{cidr}"
+    },
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "format-muted": "󰝟  muted",
+        "format-icons": {
+            "headphone": "",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "pavucontrol",
+        "scroll-step": 5
+    },
+
+    "custom/sep2": {
+        "format": "|",
+        "tooltip": false
+    },
+
+    "clock#time": {
+        "format": "󰥔  {:%H:%M}",
+        "tooltip": false
+    },
+    "clock#date": {
+        "format": "  {:%a %d %b}",
+        "tooltip-format": "<big>{:%B %Y}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+
+    "custom/sep3": {
+        "format": "|",
+        "tooltip": false
+    },
+
+    "custom/power": {
+        "format": "",
+        "on-click": "lock.sh",
+        "tooltip": false
+    }
+}

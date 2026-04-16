@@ -1,0 +1,72 @@
+#!/bin/bash
+set -euo pipefail
+
+THEMES_DIR="$HOME/Pictures/Wallpapers/themes"
+TRANSITION_TYPE="wipe"
+TRANSITION_DURATION="1"
+
+usage() {
+    echo "Usage: wallpaper-set [theme-name]"
+    echo ""
+    echo "Sets the wallpaper for all monitors from a saved theme."
+    echo "If no theme name is given, opens a fuzzel picker."
+    echo ""
+    echo "Available themes:"
+    for d in "$THEMES_DIR"/*/; do
+        [[ -d "$d" ]] && echo "  $(basename "$d")"
+    done
+    exit 1
+}
+
+# List available themes
+list_themes() {
+    for d in "$THEMES_DIR"/*/; do
+        [[ -d "$d" ]] && basename "$d"
+    done
+}
+
+# Pick theme: argument or fuzzel
+if [[ $# -ge 1 ]]; then
+    THEME="$1"
+else
+    THEME=$(list_themes | fuzzel --dmenu --prompt="Wallpaper: ")
+    [[ -z "$THEME" ]] && exit 0
+fi
+
+THEME_DIR="$THEMES_DIR/$THEME"
+
+if [[ ! -d "$THEME_DIR" ]]; then
+    echo "Error: theme '$THEME' not found"
+    usage
+fi
+
+# Ensure swww-daemon is running
+if ! pgrep -f swww-daemon > /dev/null 2>&1; then
+    swww-daemon &>/dev/null &
+    sleep 1
+fi
+
+# Get active outputs
+active_outputs=$(niri msg outputs | grep -B1 "Current mode" | awk '/^Output/{print $NF}' | tr -d '"()')
+
+# Apply wallpaper for each active output that has a slice
+for output in $active_outputs; do
+    # Find the wallpaper file for this output
+    wallpaper="$THEME_DIR/$output.jpg"
+    if [[ ! -f "$wallpaper" ]]; then
+        # Try png
+        wallpaper="$THEME_DIR/$output.png"
+    fi
+
+    if [[ -f "$wallpaper" ]]; then
+        swww img -o "$output" "$wallpaper" \
+            --resize no \
+            --transition-type "$TRANSITION_TYPE" \
+            --transition-duration "$TRANSITION_DURATION"
+        echo "Set $output -> $wallpaper"
+    else
+        echo "Warning: no wallpaper for $output in theme '$THEME'"
+    fi
+done
+
+echo "Theme '$THEME' applied."

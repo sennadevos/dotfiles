@@ -1,0 +1,6 @@
+# Pre-existing chezmoi files (managed locally, not pushed to this repo)
+/dot_bashrc
+/dot_bashrc.d/
+/dot_claude/
+/dot_config/private_kglobalshortcutsrc
+/dot_local/share/
