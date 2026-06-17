@@ -1,0 +1,6 @@
+# Load all configuration files from .config/zsh/conf.d
+for file in ~/.config/zsh/*.zsh; do
+  source "$file"
+done
+
+export PATH="$PATH:/home/$USER/.local/bin:/home/$USER/go/bin"
