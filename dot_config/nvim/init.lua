@@ -26,8 +26,12 @@ _G.later = MiniDeps.later
 require('config.keymaps')
 require('config.options')
 require('config.plugins')
--- require('config.completion')
+require('config.completion')
 require('config.terminal')
+require('config.github')
+require('config.prose')
+require('config.git')
+pcall(require, 'config.markdown-preview')  -- from go-grip-preview repo (symlinked)
 
 -- Disable arrow keys in Normal mode
 vim.keymap.set('n', '<Up>', '<cmd>echo "Use k!"<CR>')
