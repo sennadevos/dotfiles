@@ -74,8 +74,12 @@ Auto-enabled for `markdown`, `text`, `gitcommit`, `mail`, `rst`.
 
 | Key | Action |
 |---|---|
-| `gd` | go to definition |
+| `gd` | go to definition / function body — in C **this is your "go to implementation"** (also opens the file when on an `#include`) |
+| `gi` | LSP go-to-implementation — **C++ overrides only**; empty for plain C (use `gd`) |
+| `<leader>o` | clangd: switch source ↔ header (`.c` ↔ `.h`) — the practical "open the implementation file" in C |
+| `gf` | open the file under cursor — `#include`s resolve via `compile_commands.json` (ESP-IDF components + IDF headers) |
 | `K` | hover docs |
+| `grr` / `gri` | (nvim defaults) references / implementation via the picker |
 | `<leader>rn` | rename symbol |
 | `<C-Space>` | force completion menu |
 | `<A-Space>` | force fallback (buffer words / dictionary) |

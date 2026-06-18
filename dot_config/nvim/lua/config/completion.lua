@@ -83,12 +83,67 @@ require('mini.completion').setup({
 -- nvim-lspconfig now just ships the server definitions in lsp/<name>.lua;
 -- we activate them with vim.lsp.enable() instead of the old `.setup()` shim.
 -- Buffer-local keymaps are wired once, on attach, for whichever server lands.
+
+-- Switch between a C/C++ source and its header. Tries clangd's
+-- textDocument/switchSourceHeader first, but clangd misses the ESP-IDF layout
+-- (source in the component root, header in an include/ subdir) when going
+-- .c -> .h, so on an empty result we fall back to a basename search across
+-- common sibling dirs and the buffer's `path` (the compile_commands include
+-- dirs that config.cnav populates).
+local function switch_source_header(bufnr)
+  bufnr = bufnr or 0
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  local stem = vim.fn.fnamemodify(name, ':t:r')
+  local ext  = vim.fn.fnamemodify(name, ':e')
+  local src_exts = { 'c', 'cc', 'cpp', 'cxx', 'm', 'mm' }
+  local hdr_exts = { 'h', 'hh', 'hpp', 'hxx' }
+  local want = vim.tbl_contains(src_exts, ext) and hdr_exts or src_exts
+
+  local function open_counterpart()
+    local dir = vim.fn.fnamemodify(name, ':h')
+    local roots = { dir, dir .. '/include', dir .. '/../include', dir .. '/..', dir .. '/src', dir .. '/../src' }
+    for _, e in ipairs(want) do
+      for _, r in ipairs(roots) do
+        local cand = r .. '/' .. stem .. '.' .. e
+        if vim.uv.fs_stat(cand) then
+          vim.cmd.edit(vim.fn.fnamemodify(cand, ':p'))
+          return true
+        end
+      end
+      local found = vim.fn.findfile(stem .. '.' .. e, vim.bo[bufnr].path)
+      if found ~= '' then
+        vim.cmd.edit(vim.fn.fnamemodify(found, ':p'))
+        return true
+      end
+    end
+    return false
+  end
+
+  local c = vim.lsp.get_clients({ name = 'clangd', bufnr = bufnr })[1]
+  if not c then
+    if not open_counterpart() then vim.notify('no paired source/header found', vim.log.levels.INFO) end
+    return
+  end
+  c:request('textDocument/switchSourceHeader', { uri = vim.uri_from_bufnr(bufnr) }, function(err, result)
+    if not err and result then
+      vim.cmd.edit(vim.uri_to_fname(result))
+    elseif not open_counterpart() then
+      vim.notify('no paired source/header found', vim.log.levels.INFO)
+    end
+  end, bufnr)
+end
+
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(ev)
     local opts = { buffer = ev.buf }
-    vim.keymap.set('n', 'gd',         vim.lsp.buf.definition, opts)  -- go to definition
-    vim.keymap.set('n', 'K',          vim.lsp.buf.hover,      opts)  -- hover docs
-    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename,     opts)  -- rename symbol
+    vim.keymap.set('n', 'gd',         vim.lsp.buf.definition,     opts)  -- go to definition (in C: the function body / "implementation")
+    vim.keymap.set('n', 'gi',         vim.lsp.buf.implementation, opts)  -- go to implementation (C++ overrides; empty for plain C — use gd)
+    vim.keymap.set('n', 'K',          vim.lsp.buf.hover,          opts)  -- hover docs
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename,         opts)  -- rename symbol
+
+    -- Switch source <-> header (.c/.h). clangd first, path-based fallback for
+    -- the ESP-IDF include/ layout it can't pair from the .c side.
+    vim.keymap.set('n', '<leader>o', function() switch_source_header(0) end, opts)
   end,
 })
 
