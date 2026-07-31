@@ -1,0 +1,16 @@
+# imv(5) — https://sr.ht/~exec64/imv/
+# /usr/bin/imv is a wrapper that execs imv-wayland under Wayland.
+
+[options]
+# White canvas behind the image instead of imv's default black.
+# Accepts a 6-digit hex colour or `checks` for a chequerboard (useful for
+# judging transparency in PNGs/SVGs).
+background = ffffff
+
+# Keep the pixel grid crisp when zoomed past 100% instead of blurring it.
+upscaling_method = nearest_neighbour
+
+# Overlay bar, off by default — toggle at runtime with `d`.
+# The text is shell-expanded, so these are imv's own env vars.
+overlay = false
+overlay_text = [$imv_current_index/$imv_file_count] $imv_current_file  ${imv_width}x${imv_height}  $imv_scale%

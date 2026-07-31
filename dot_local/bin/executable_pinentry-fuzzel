@@ -1,0 +1,72 @@
+#!/bin/bash
+# Minimal Assuan pinentry that prompts with fuzzel instead of a toolkit dialog.
+#
+# Fedora only ships pinentry and pinentry-curses here, and curses is useless when
+# rbw is triggered from a niri keybind with no terminal attached. Layering
+# pinentry-gnome3 onto the image for one dialog isn't worth an image rebuild, and
+# fuzzel is already installed and already themed — so it plays the pinentry role.
+#
+# Implements just the subset of the Assuan protocol that gpg-agent/rbw actually
+# drive: the SET* setters are accepted and mostly ignored, GETPIN prompts, and
+# CONFIRM/MESSAGE are answered. Everything unknown gets a bare OK so a caller
+# sending an option we don't model can't wedge the handshake.
+
+desc=""
+prompt="PIN:"
+title="Unlock"
+err=""
+
+# The description carries the useful context (which vault/key), and arrives
+# percent-and-plus escaped per the protocol.
+unescape() {
+    printf '%b' "$(printf '%s' "$1" | sed 's/+/ /g; s/%/\\x/g')"
+}
+
+ask() {  # -> pin on stdout, non-zero if cancelled
+    local mesg="$desc"
+    [ -n "$err" ] && mesg="$err${mesg:+ — $mesg}"
+    fuzzel --dmenu \
+        --namespace=fuzzel-secret \
+        --password \
+        --lines=0 \
+        --width=40 \
+        --prompt="${prompt%% } " \
+        ${mesg:+--mesg="$mesg"} \
+        < /dev/null
+}
+
+printf 'OK Pleased to meet you\n'
+while IFS= read -r line; do
+    cmd=${line%% *}
+    arg=${line#"$cmd"}
+    arg=${arg# }
+    case "$cmd" in
+        SETDESC)   desc=$(unescape "$arg"); printf 'OK\n' ;;
+        SETPROMPT) prompt=$(unescape "$arg"); printf 'OK\n' ;;
+        SETTITLE)  title=$(unescape "$arg"); printf 'OK\n' ;;
+        SETERROR)  err=$(unescape "$arg"); printf 'OK\n' ;;
+        GETPIN)
+            if pin=$(ask) && [ -n "$pin" ]; then
+                printf 'D %s\nOK\n' "$pin"
+            else
+                # 83886179 == GPG_ERR_CANCELED, what callers check to distinguish
+                # "user pressed Esc" from a real failure.
+                printf 'ERR 83886179 Operation cancelled\n'
+            fi
+            err="" ;;
+        CONFIRM)
+            if [ "$(printf 'Yes\nNo\n' | fuzzel --dmenu --namespace=fuzzel-secret \
+                    --lines=2 --width=40 --prompt='? ' ${desc:+--mesg="$desc"})" = "Yes" ]; then
+                printf 'OK\n'
+            else
+                printf 'ERR 83886179 Operation cancelled\n'
+            fi ;;
+        MESSAGE)
+            fuzzel --dmenu --namespace=fuzzel-secret --lines=0 --width=40 \
+                --prompt-only="${desc:-$title} " < /dev/null >/dev/null 2>&1 || true
+            printf 'OK\n' ;;
+        BYE) printf 'OK closing connection\n'; exit 0 ;;
+        "")  ;;
+        *)   printf 'OK\n' ;;
+    esac
+done

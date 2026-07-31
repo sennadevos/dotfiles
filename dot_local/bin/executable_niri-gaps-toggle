@@ -1,0 +1,66 @@
+#!/bin/sh
+# Toggle niri's window gaps AND rounded corners on/off together, for a flat
+# edge-to-edge look.
+#
+# niri 25.11 has no runtime action for either, so the only lever is config.kdl —
+# niri watches the file and live-reloads, so rewriting it takes effect at once.
+#
+# Touches exactly two lines:
+#   layout      { gaps N }
+#   window-rule { geometry-corner-radius N }
+#
+# The "on" values are remembered in $XDG_CACHE_HOME rather than hardcoded, so
+# whatever config.kdl says is what you toggle back to — config.kdl stays the
+# single source of truth. The full value string is stored verbatim, so a
+# multi-value radius (e.g. "12 12 8 8") round-trips intact.
+set -eu
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.kdl"
+STATE="${XDG_CACHE_HOME:-$HOME/.cache}/niri-gaps-restore"
+FALLBACK_GAPS=16
+FALLBACK_RADIUS=12
+
+[ -w "$CFG" ] || { echo "niri-gaps-toggle: $CFG is not writable" >&2; exit 1; }
+
+# Read the current values. Anchored so commented-out mentions never match.
+read_val() {
+    sed -n "s/^[[:space:]]*$1[[:space:]]\{1,\}\([0-9][0-9 ]*\).*/\1/p" "$CFG" \
+        | head -1 | sed 's/[[:space:]]*$//'
+}
+cur_gaps=$(read_val gaps)
+cur_radius=$(read_val geometry-corner-radius)
+
+[ -n "$cur_gaps" ] || { echo "niri-gaps-toggle: no 'gaps' line in $CFG" >&2; exit 1; }
+
+# "Off" means gaps are already zeroed; gaps is the state indicator.
+if [ "$cur_gaps" = "0" ]; then
+    want_gaps=$FALLBACK_GAPS
+    want_radius=$FALLBACK_RADIUS
+    if [ -r "$STATE" ]; then
+        saved_gaps=$(sed -n 's/^gaps=//p'   "$STATE" | head -1)
+        saved_radius=$(sed -n 's/^radius=//p' "$STATE" | head -1)
+        case "$saved_gaps"   in ''|0|*[!0-9\ ]*) ;; *) want_gaps=$saved_gaps ;; esac
+        case "$saved_radius" in ''|0|*[!0-9\ ]*) ;; *) want_radius=$saved_radius ;; esac
+    fi
+else
+    mkdir -p "$(dirname "$STATE")"
+    { printf 'gaps=%s\n' "$cur_gaps"
+      printf 'radius=%s\n' "$cur_radius"; } > "$STATE"
+    want_gaps=0
+    want_radius=0
+fi
+
+# Rewrite the first occurrence of each key, preserving indentation.
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+awk -v g="$want_gaps" -v r="$want_radius" '
+    function emit(key, val) {
+        match($0, /^[[:space:]]*/)
+        printf "%s%s %s\n", substr($0, 1, RLENGTH), key, val
+    }
+    !dg && /^[[:space:]]*gaps[[:space:]]+[0-9]/                    { emit("gaps", g);                    dg=1; next }
+    !dr && /^[[:space:]]*geometry-corner-radius[[:space:]]+[0-9]/  { emit("geometry-corner-radius", r);   dr=1; next }
+    { print }
+' "$CFG" > "$tmp"
+
+cat "$tmp" > "$CFG"   # write in place, so the inode (and any symlink) survives

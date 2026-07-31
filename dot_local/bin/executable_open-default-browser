@@ -1,0 +1,34 @@
+#!/bin/sh
+# Launch the default web browser with no URL.
+#
+# Deliberately does NOT name a browser: it resolves whatever is currently
+# registered as the default and launches that, so the niri keybind keeps
+# following ~/.config/mimeapps.list instead of hardcoding one app.
+set -eu
+
+# xdg-settings is the canonical query; the https scheme handler is the fallback
+# for the case where only mimeapps.list has been edited.
+entry=$(xdg-settings get default-web-browser 2>/dev/null || true)
+[ -n "${entry:-}" ] || entry=$(xdg-mime query default x-scheme-handler/https 2>/dev/null || true)
+[ -n "${entry:-}" ] || {
+    echo "open-default-browser: no default web browser is set" >&2
+    exit 1
+}
+
+# Resolve the desktop id to a file across the XDG data dirs, in precedence
+# order (XDG_DATA_HOME first, then XDG_DATA_DIRS — which includes the flatpak
+# exports on this system).
+old_ifs=$IFS
+IFS=:
+# shellcheck disable=SC2086
+set -- "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
+IFS=$old_ifs
+
+for dir in "$@"; do
+    if [ -f "$dir/applications/$entry" ]; then
+        exec gio launch "$dir/applications/$entry"
+    fi
+done
+
+echo "open-default-browser: desktop entry '$entry' not found in any XDG data dir" >&2
+exit 1

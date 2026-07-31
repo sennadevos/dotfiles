@@ -1,0 +1,116 @@
+#!/bin/bash
+set -euo pipefail
+# Bitwarden credential picker for niri: fuzzel front-end over rbw.
+#
+# Replaces the browser extension (the custom browser has no addons) and avoids
+# the desktop app's workspace round-trip — bound to a niri key, it pops up over
+# whatever has focus, and either types into that window or copies to clipboard.
+#
+# One menu, Enter for the common case and Alt+N for the variants, so both fill
+# methods are reachable without a second menu. The bindings are printed in the
+# message line above the prompt because they're not otherwise discoverable.
+#
+# fuzzel's dmenu contract: Enter exits 0, custom-N exits 10+N-1 (Alt+N).
+
+CLEAR_AFTER=45   # seconds before a copied secret is purged again
+
+notify() { notify-send -a bw-menu -t 3000 "$@" >/dev/null 2>&1 || true; }
+die() { notify -u critical "Bitwarden" "$1"; exit 1; }
+
+command -v rbw >/dev/null || die "rbw is not installed"
+
+# rbw-agent holds the unlocked vault; unlock prompts via pinentry. Do this before
+# showing the menu so the pinentry dialog can't fight fuzzel for keyboard focus.
+if ! rbw unlocked >/dev/null 2>&1; then
+    rbw unlock >/dev/null 2>&1 || die "Vault unlock failed or cancelled"
+fi
+
+# --namespace keeps the picker out of screencasts on compositors that filter by
+# layer-shell namespace; the list itself shows names only, never secrets.
+entries=$(rbw list --fields name,user 2>/dev/null | awk -F'\t' 'NF && $1 != "" {
+    printf "%s\t%s\n", $1, ($2 == "" ? "-" : $2)
+}' | sort -u)
+[ -n "$entries" ] || die "Vault is empty (try: rbw sync)"
+
+# Pad the name column here rather than piping through `column -t`, so the exact
+# text fuzzel prints back can be looked up again below. Prefix-matching the
+# returned line against the name list would mis-resolve entries whose names share
+# a prefix ("Google" vs "Google Cloud"), so the display line is the lookup key.
+display=$(printf '%s\n' "$entries" | awk -F'\t' '
+    { n[NR] = $1; u[NR] = $2; if (length($1) > w) w = length($1) }
+    END { for (i = 1; i <= NR; i++) printf "%-*s  %s\n", w, n[i], u[i] }')
+
+set +e
+choice=$(printf '%s\n' "$display" \
+    | fuzzel --dmenu \
+        --namespace=fuzzel-secret \
+        --prompt='󰌾 ' \
+        --placeholder='search vault' \
+        --mesg='enter type user+pass · alt+1 copy pass · alt+2 copy user · alt+3 type pass · alt+4 copy totp' \
+        --lines=12 --width=60)
+action=$?
+set -e
+
+# 1 is a normal cancel (Esc / no match); anything else unexpected is an error.
+[ "$action" -eq 1 ] && exit 0
+[ -z "$choice" ] && exit 0
+
+# Same padding, same order: the Nth display line is the Nth entry line, so match
+# the returned line exactly and take the corresponding name/user pair.
+idx=$(printf '%s\n' "$display" | grep -nxF -- "$choice" | head -1 | cut -d: -f1)
+[ -n "$idx" ] || die "Could not resolve the selected entry"
+match=$(printf '%s\n' "$entries" | sed -n "${idx}p")
+name=$(printf '%s' "$match" | cut -f1)
+user=$(printf '%s' "$match" | cut -f2)
+[ "$user" = "-" ] && user=""
+
+# rbw disambiguates same-named entries by username, so pass it when we have one.
+get() {  # get <subcommand...>
+    if [ -n "$user" ]; then rbw "$@" -- "$name" "$user"; else rbw "$@" -- "$name"; fi
+}
+
+copy() {  # copy <label> — secret on stdin
+    local secret; secret=$(cat)
+    [ -n "$secret" ] || die "$1 is empty for $name"
+    printf '%s' "$secret" | wl-copy --trim-newline
+    notify "Copied $1" "$name"
+    # cliphist's wl-paste watcher stores everything, so the secret has to be
+    # pulled out of history too, not just off the clipboard.
+    ( sleep "$CLEAR_AFTER"
+      [ "$(wl-paste --no-newline 2>/dev/null)" = "$secret" ] && wl-copy --clear
+      printf '%s' "$secret" | cliphist delete >/dev/null 2>&1
+    ) >/dev/null 2>&1 &
+}
+
+type_out() {  # text on stdin, typed literally
+    # Two things force the stdin form here. wtype's `--` is a one-way latch: the
+    # first one turns every later argument into literal text, so a `-k Tab` can't
+    # sit between two `--` text arguments — it gets typed out instead of pressed.
+    # A bare `-` argument reads that text from stdin unparsed, which dodges the
+    # latch and also keeps the password out of argv, where any local process
+    # could read it from /proc/<pid>/cmdline.
+    #
+    # A literal tab in the text is enough to move between fields: wtype converts
+    # each character with xkb_utf32_to_keysym, and U+0009 maps to XK_Tab, so it
+    # becomes a real Tab keypress rather than inserted whitespace.
+    #
+    # fuzzel has exited but the compositor needs a moment to hand focus back to
+    # the window underneath before the keystrokes land in the right place.
+    sleep 0.2
+    # -d spaces the keystrokes out slightly; login forms with JS input handlers
+    # drop characters when they arrive with no delay at all.
+    wtype -d 12 - || die "wtype failed (is the virtual-keyboard protocol available?)"
+}
+
+case "$action" in
+    0)  pass=$(get get) || die "Could not read password for $name"
+        [ -n "$user" ] || die "$name has no username to type"
+        printf '%s\t%s' "$user" "$pass" | type_out ;;
+    10) get get | copy "password" ;;
+    11) [ -n "$user" ] || die "$name has no username"
+        printf '%s' "$user" | copy "username" ;;
+    12) pass=$(get get) || die "Could not read password for $name"
+        printf '%s' "$pass" | type_out ;;
+    13) get code | copy "TOTP" ;;
+    *)  die "fuzzel exited unexpectedly ($action)" ;;
+esac

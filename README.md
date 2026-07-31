@@ -14,12 +14,16 @@ Managed with [chezmoi](https://www.chezmoi.io/). Source directory is `~/.dotfile
 - **lock.sh** — per-monitor screenshot → corrupter glitch → swaylock.
 - **wallpaper-create** — slice a source image into per-monitor wallpapers based on niri's detected layout.
 - **wallpaper-set** — apply a saved theme to all monitors (fuzzel picker if no argument).
+- **bw-menu** — Bitwarden login picker (fuzzel over rbw), bound to `Super+P`. Enter types `user⇥pass` into the focused window; `Alt+1/2` copy password/username, `Alt+3` types the password alone, `Alt+4` copies a TOTP code. Copied secrets are cleared from both the clipboard and cliphist history after 45s.
+- **pinentry-fuzzel** — minimal Assuan pinentry that prompts via fuzzel, so `rbw` can unlock from a keybind (Fedora ships only `pinentry-curses`, useless without a terminal).
 
 See `dot_local/bin/README-wallpapers.md` for the wallpaper theme system.
 
 ### Install hooks
 - **run_once_before_install-cliphist.sh** — builds cliphist in an ephemeral toolbox.
 - **run_once_before_install-swww.sh** — builds swww (both binaries) in an ephemeral toolbox.
+- **run_once_before_install-rbw.sh** — cargo-builds rbw + rbw-agent (Bitwarden CLI) in an ephemeral toolbox.
+- **run_once_before_install-wtype.sh** — builds wtype (Wayland autotype) in an ephemeral toolbox.
 
 These run automatically on first `chezmoi apply`, then are skipped forever unless their contents change.
 
