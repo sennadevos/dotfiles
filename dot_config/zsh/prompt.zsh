@@ -21,7 +21,8 @@ elif [[ -r /run/.containerenv ]]; then
   unset _box
 fi
 
-# Prompt — container badge (when inside one) + user, cwd, git branch, ❯ caret.
-export PROMPT="${_container_seg}%F{green}%n%f %F{blue}%~%f\$(git_branch) %F{magenta}❯%f "
+# Prompt — container badge (when inside one) + user@host, cwd, git branch, ❯ caret.
+# %m is the hostname up to the first dot; %M would be the fully qualified one.
+export PROMPT="${_container_seg}%F{green}%n%f%F{green}@%m%f %F{blue}%~%f\$(git_branch) %F{magenta}❯%f "
 unset _container_seg
 
