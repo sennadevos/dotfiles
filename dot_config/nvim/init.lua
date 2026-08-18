@@ -32,6 +32,7 @@ require('config.terminal')
 require('config.github')
 require('config.prose')
 require('config.git')
+require('config.coreos')
 pcall(require, 'config.markdown-preview')  -- from go-grip-preview repo (symlinked)
 
 -- Disable arrow keys in Normal mode
