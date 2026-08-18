@@ -8,6 +8,23 @@ git_branch() {
   [[ -n $branch ]] && echo " %F{cyan}($branch)%f"
 }
 
+# Current directory for the prompt. %~ can't be used here: on Fedora Atomic
+# /home is a symlink to var/home, so $PWD is often /var/home/sjdevos/... while
+# $HOME is /home/sjdevos and the two never match. Collapse either spelling to ~,
+# then keep only the last 3 components so deep paths don't stretch the line.
+prompt_cwd() {
+  local p=$PWD
+  p=${p/#\/var\/home\/$USER/\~}
+  p=${p/#$HOME/\~}
+
+  local -a parts=(${(s:/:)p})
+  if (( ${#parts} > 3 )); then
+    p="…/${(j:/:)parts[-3,-1]}"
+  fi
+
+  print -r -- ${p//\%/%%}
+}
+
 # Container indicator. distrobox/toolbox run under podman: distrobox exports
 # CONTAINER_ID, and both drop /run/.containerenv with name="<box>". Resolve it
 # once at startup (it can't change mid-session) and bake it into PROMPT, so
@@ -23,6 +40,6 @@ fi
 
 # Prompt — container badge (when inside one) + user@host, cwd, git branch, ❯ caret.
 # %m is the hostname up to the first dot; %M would be the fully qualified one.
-export PROMPT="${_container_seg}%F{green}%n%f%F{green}@%m%f %F{blue}%~%f\$(git_branch) %F{magenta}❯%f "
+export PROMPT="${_container_seg}%F{green}%n%f%F{green}@%m%f %F{blue}\$(prompt_cwd)%f\$(git_branch) %F{magenta}❯%f "
 unset _container_seg
 
