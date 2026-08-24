@@ -1,0 +1,10 @@
+#!/bin/sh
+# Autostart wrapper for the DeepSeek Harness web UI.
+#
+# Guard: mise only creates the shim when the dsh tool is installed, so on a
+# host without dsh this exits quietly and the autostart entry does nothing.
+DSH="$HOME/.local/share/mise/shims/dsh"
+[ -x "$DSH" ] || exit 0
+
+# --no-open: serve only; don't pop a browser tab at every login.
+exec "$DSH" web --no-open
