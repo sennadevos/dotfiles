@@ -17,3 +17,5 @@ llm-pi-ai:
 agent-default-model:
   provider: openrouter
   model: deepseek/deepseek-v4-flash
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1

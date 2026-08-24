@@ -1,0 +1,15 @@
+[Unit]
+Description=DeepSeek Harness web UI
+# Silent no-op on hosts where mise doesn't provide dsh: the condition makes
+# systemd skip the start without marking the unit failed.
+ConditionPathExists=%h/.local/share/mise/shims/dsh
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/dsh-web
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
