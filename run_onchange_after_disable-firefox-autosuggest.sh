@@ -14,12 +14,16 @@
 # prefs below change.
 set -eu
 
-FF_DIR="$HOME/.mozilla/firefox"
-INI="$FF_DIR/profiles.ini"
+# Firefox's profile root differs per install method/distro build: classic
+# ~/.mozilla, the XDG layout (Fedora & co), Flatpak, Snap. Handle every base
+# that has a profiles.ini.
+FF_BASES="$HOME/.mozilla/firefox
+${XDG_CONFIG_HOME:-$HOME/.config}/mozilla/firefox
+$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox
+$HOME/snap/firefox/common/.mozilla/firefox"
+
 BEGIN="// >>> dotfiles: disable input auto-suggest (managed, do not edit inside)"
 END="// <<< dotfiles: disable input auto-suggest"
-
-[ -r "$INI" ] || { echo "firefox-autosuggest: no $INI — nothing to do"; exit 0; }
 
 # Pref values verified against Firefox 149 defaults (omni.ja greprefs.js /
 # browser/omni.ja defaults/preferences/firefox.js).
@@ -50,40 +54,58 @@ user_pref("signon.autofillForms.autocompleteOff", false);
 PREFS
 )
 
-# Every profile in profiles.ini. A Path starting with / is absolute
-# (IsRelative=0); otherwise it's relative to ~/.mozilla/firefox.
-sed -n 's/^Path=//p' "$INI" | while IFS= read -r p; do
-    [ -n "$p" ] || continue
-    case "$p" in
-        /*) dir="$p" ;;
-        *)  dir="$FF_DIR/$p" ;;
-    esac
-    [ -d "$dir" ] || { echo "firefox-autosuggest: skipping missing profile $dir"; continue; }
+# Every profile in one base's profiles.ini. A Path starting with / is absolute
+# (IsRelative=0); otherwise it's relative to that base.
+process_base() {
+    ff_dir=$1
+    ini="$ff_dir/profiles.ini"
+    sed -n 's/^Path=//p' "$ini" | while IFS= read -r p; do
+        [ -n "$p" ] || continue
+        case "$p" in
+            /*) dir="$p" ;;
+            *)  dir="$ff_dir/$p" ;;
+        esac
+        [ -d "$dir" ] || { echo "firefox-autosuggest: skipping missing profile $dir"; continue; }
 
-    js="$dir/user.js"
-    tmp=$(mktemp)
+        js="$dir/user.js"
+        tmp=$(mktemp)
 
-    # Carry over everything outside a previously written block.
-    if [ -f "$js" ]; then
-        awk -v b="$BEGIN" -v e="$END" '
-            $0 == b { skip = 1; next }
-            $0 == e { skip = 0; next }
-            !skip
-        ' "$js" > "$tmp"
-        # Collapse trailing blank lines so re-runs don't accumulate them.
-        while [ -s "$tmp" ] && [ -z "$(tail -n1 "$tmp")" ]; do
-            sed -i '$d' "$tmp"
-        done
-        [ -s "$tmp" ] && printf '\n' >> "$tmp"
-    fi
+        # Carry over everything outside a previously written block.
+        if [ -f "$js" ]; then
+            awk -v b="$BEGIN" -v e="$END" '
+                $0 == b { skip = 1; next }
+                $0 == e { skip = 0; next }
+                !skip
+            ' "$js" > "$tmp"
+            # Collapse trailing blank lines so re-runs don't accumulate them.
+            while [ -s "$tmp" ] && [ -z "$(tail -n1 "$tmp")" ]; do
+                sed -i '$d' "$tmp"
+            done
+            [ -s "$tmp" ] && printf '\n' >> "$tmp"
+        fi
 
-    {
-        printf '%s\n' "$BEGIN"
-        printf '%s\n' "$payload"
-        printf '%s\n' "$END"
-    } >> "$tmp"
+        {
+            printf '%s\n' "$BEGIN"
+            printf '%s\n' "$payload"
+            printf '%s\n' "$END"
+        } >> "$tmp"
 
-    mv "$tmp" "$js"
-    chmod 644 "$js"
-    echo "firefox-autosuggest: wrote $(basename "$dir")/user.js"
+        mv "$tmp" "$js"
+        chmod 644 "$js"
+        echo "firefox-autosuggest: wrote $dir/user.js"
+    done
+}
+
+found=0
+# FF_BASES is newline-separated; word-splitting on IFS=newline keeps paths
+# with spaces intact (none expected, but cheap to be correct).
+old_ifs=$IFS; IFS='
+'
+for base in $FF_BASES; do
+    [ -r "$base/profiles.ini" ] || continue
+    found=1
+    process_base "$base"
 done
+IFS=$old_ifs
+
+[ "$found" -eq 1 ] || echo "firefox-autosuggest: no profiles.ini in any known location — nothing to do"
