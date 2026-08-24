@@ -1,8 +1,9 @@
 #!/bin/sh
-# Autostart wrapper for the DeepSeek Harness web UI.
+# Launch wrapper for the DeepSeek Harness web UI (used by dsh-web.service).
 #
 # Guard: mise only creates the shim when the dsh tool is installed, so on a
-# host without dsh this exits quietly and the autostart entry does nothing.
+# host without dsh this exits quietly. The service also carries a
+# ConditionPathExists on the shim; this is the belt to that suspender.
 DSH="$HOME/.local/share/mise/shims/dsh"
 [ -x "$DSH" ] || exit 0
 
