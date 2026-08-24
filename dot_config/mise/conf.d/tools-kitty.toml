@@ -1,0 +1,10 @@
+[tools."http:kitty"]
+version = "latest"
+format = "tar.xz"
+version_list_url = "https://api.github.com/repos/kovidgoyal/kitty/releases"
+version_json_path = ".[].tag_name"
+version_order = "semver"
+
+[tools."http:kitty".platforms]
+linux-x64 = { url = "https://github.com/kovidgoyal/kitty/releases/download/v{{ version }}/kitty-{{ version }}-x86_64.txz" }
+linux-arm64 = { url = "https://github.com/kovidgoyal/kitty/releases/download/v{{ version }}/kitty-{{ version }}-arm64.txz" }

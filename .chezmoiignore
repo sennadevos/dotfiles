@@ -1,0 +1,6 @@
+./install.sh
+
+# Local-only secret: OpenRouter API key referenced by dot_dsh/settings.yaml.
+# Never add this to the repo; recreate per machine (format documented in
+# dot_dsh/settings.yaml).
+.dsh/.credentials.yaml

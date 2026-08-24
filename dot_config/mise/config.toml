@@ -1,0 +1,28 @@
+# ~/.config/mise/config.toml
+[tools]
+## Toolchains & compilers
+go = "latest"
+node = "lts"
+rust = "stable"
+
+fzf = "latest"
+tmux = "latest"
+# mosh: no mise backend exists (upstream ships no binaries), so it comes from
+# conda-forge via pixi: `pixi global install mosh` (exposed in ~/.pixi/bin).
+pixi = "latest"
+
+gh = "latest"
+doctl = "latest"
+"npm:@anthropic-ai/claude-code" = { version = "latest", npm_args = "--ignore-scripts=false" }
+"npm:@deepseek-ai/dsh" = "latest"
+
+neovim = "latest"
+"github:marktext/marktext" = { version = "latest", postinstall = "~/.config/mise/tasks/extract-marktext-desktop.sh" }
+
+[settings]
+# dsh only has releases newer than mise's npm release-age cooldown; trust the
+# @deepseek-ai scope explicitly so it can install.
+minimum_release_age_excludes = ["npm:@deepseek-ai/dsh"]
+npm.bun = false
+npm.shell_out = true
+npm.package_manager = "npm"

@@ -1,0 +1,11 @@
+[tools."http:kdrive"]
+version = "latest"
+version_list_url = "https://www.infomaniak.com/drive/latest"
+version_json_path = ".linux-amd64.version"
+bin = "kdrive"
+postinstall = "{{xdg_config_home}}/mise/tasks/extract-kdrive-desktop.sh"
+
+[tools."http:kdrive".platforms]
+linux-x64   = { url = "https://download.storage.infomaniak.com/drive/desktopclient/kDrive-{{version}}-amd64.AppImage" }
+linux-arm64 = { url = "https://download.storage.infomaniak.com/drive/desktopclient/kDrive-{{version}}-arm64.AppImage" }
+

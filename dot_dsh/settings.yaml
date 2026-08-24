@@ -1,0 +1,19 @@
+# dsh (DeepSeek Harness) settings — hot-reloaded.
+# OpenRouter is a first-class pi-ai route: endpoint, protocol, and the full
+# model catalog are inherited from the installed catalog. Do NOT add a
+# `models:` list here — it REPLACES the catalog instead of extending it.
+llm-pi-ai:
+  providers:
+    openrouter:
+      apiKeyEnv: OPENROUTER_API_KEY
+
+# The key itself lives in ~/.dsh/.credentials.yaml, which is deliberately NOT
+# managed by chezmoi (local-only secret; see .chezmoiignore). On a new machine
+# recreate it as:
+#   version: 1
+#   refs:
+#     OPENROUTER_API_KEY: <key>
+
+agent-default-model:
+  provider: openrouter
+  model: deepseek/deepseek-v4-flash
