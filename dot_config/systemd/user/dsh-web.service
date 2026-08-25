@@ -8,6 +8,9 @@ PartOf=graphical-session.target
 
 [Service]
 ExecStart=%h/.local/bin/dsh-web
+# mise shims on PATH so subagent providers can spawn `claude` etc.; the
+# systemd user manager's default PATH doesn't include them.
+Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 Restart=on-failure
 RestartSec=5
 

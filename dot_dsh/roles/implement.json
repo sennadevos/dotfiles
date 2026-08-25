@@ -1,0 +1,8 @@
+{
+  "id": "implement",
+  "description": "Heavy implementation and coding tasks. Delegate substantial code-writing work here by default: it runs on Claude Code (flat-rate subscription), saving per-token cost. Standard permissions.",
+  "provider": "claude-code",
+  "permissionMode": "default",
+  "allowDelegation": false,
+  "instructions": "You are a coding agent handling a delegated implementation task. Complete the task, verify your work (build/tests where applicable), and report a concise summary of what changed and how it was verified."
+}

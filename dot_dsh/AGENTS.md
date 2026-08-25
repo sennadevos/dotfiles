@@ -16,6 +16,17 @@ lockfiles or CI configs:
   explicitly and either use an unpinned/latest reference or ask the user —
   do not silently pin a stale version.
 
+# Delegate heavy work to the Claude Code subagent (token economics)
+
+When the product-subagents tools (`product_delegate`, `product_roles`, …) are
+available: prefer delegating substantial implementation, refactoring, and
+code-review work to the Claude Code provider (roles like `implement` and
+`code-review`). Claude Code runs on a flat-rate subscription, while your own
+tokens are billed per use — so heavy lifting belongs there, and you act as the
+orchestrator: scope the task, delegate, verify the result. Do the work
+yourself only when it is small, conversational, or the delegation tools are
+unavailable.
+
 # Existence checks: never conclude "it doesn't exist" from filtered output
 
 When checking whether something exists (a model, package, version, release,

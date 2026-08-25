@@ -37,7 +37,7 @@ llm-pi-ai:
 #     OPENROUTER_API_KEY: <key>
 
 agent-default-model:
-  provider: openrouter
-  model: ~google/gemini-flash-latest
+  provider: openrouter-fresh
+  model: google/gemini-3.7-flash
 ui-onboarding:
   welcomeNoticeVersion: 2026-08-13.1

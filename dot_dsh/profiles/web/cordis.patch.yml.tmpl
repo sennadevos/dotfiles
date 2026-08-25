@@ -1,0 +1,10 @@
+# User patch layer for the web profile (hot-reloaded by dsh).
+# Note: a config override replaces the plugin's whole config object — restate
+# every key you want to keep (idleTimeoutMs is the bundle default restated).
+- id: product-subagents
+  config:
+    idleTimeoutMs: 600000
+    # Chezmoi-managed roles (~/.dsh/roles) instead of the plugin's shipped
+    # roles: the shipped `general` role runs Claude Code with
+    # --dangerously-skip-permissions; ours cap at standard permissions.
+    rolesDir: {{ .chezmoi.homeDir }}/.dsh/roles
