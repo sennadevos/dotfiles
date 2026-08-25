@@ -1,0 +1,5 @@
+# Short-lived dsh-web WireGuard proxy (reverted in favor of an SSH tunnel);
+# clean up the deployed units on hosts that applied them.
+.config/systemd/user/dsh-web-proxy.socket
+.config/systemd/user/dsh-web-proxy.service
+.config/systemd/user/sockets.target.wants/dsh-web-proxy.socket
