@@ -2,7 +2,9 @@
 set -euo pipefail
 
 APP="$(mise which marktext)"
-LAUNCH="$HOME/.local/bin/mise exec github:marktext/marktext -- marktext"
+# Launch through the wrapper: it disables core dumps (multi-GB cores froze
+# the system) before exec'ing marktext via mise.
+LAUNCH="$HOME/.local/bin/marktext-launch"
 
 apps_dir="$HOME/.local/share/applications"
 icon_dir="$HOME/.local/share/icons/hicolor"

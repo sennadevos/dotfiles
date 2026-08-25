@@ -1,0 +1,7 @@
+#!/bin/sh
+# Launch MarkText with core dumps disabled: when 0.19.1 crashes after its
+# memory balloon, systemd-coredump otherwise tries to write a multi-GB core
+# (16 GB peak observed on 2026-08-24), freezing the system for minutes.
+# The rlimit survives Electron's self-move into its own systemd scope.
+ulimit -c 0
+exec "$HOME/.local/bin/mise" exec github:marktext/marktext -- marktext "$@"
