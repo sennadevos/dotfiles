@@ -8,8 +8,10 @@ DSH="$HOME/.local/share/mise/shims/dsh"
 [ -x "$DSH" ] || exit 0
 
 # --no-open: serve only; don't pop a browser tab at every login.
-# --host 0.0.0.0: also reachable over WireGuard (wg-sdv-access). Relies on
-# the firewall only opening the port on that interface; the LAN stays closed.
-# --trusted-host: the /api browser-trust fence must accept the WireGuard
-# address, or remote pages load but every API call is rejected.
-exec "$DSH" web --no-open --host 0.0.0.0 --trusted-host 10.137.42.2
+# dsh (0.1.1-rc.2) refuses to bind anything but 127.0.0.1, so WireGuard
+# access goes through dsh-web-proxy.socket instead (systemd-socket-proxyd
+# on 10.137.42.2:3080 forwarding to loopback).
+# --trusted-host: browsers arriving via the proxy send the WireGuard
+# address as the Host header; the /api browser-trust fence must accept it
+# or remote pages load but every API call is rejected.
+exec "$DSH" web --no-open --trusted-host 10.137.42.2

@@ -1,0 +1,8 @@
+[Unit]
+Description=Proxy WireGuard connections to the DeepSeek Harness web UI
+Requires=dsh-web-proxy.socket
+After=dsh-web-proxy.socket
+
+[Service]
+# Socket-activated on the first connection; exits again after a quiet hour.
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=1h 127.0.0.1:3080
