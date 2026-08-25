@@ -8,4 +8,8 @@ DSH="$HOME/.local/share/mise/shims/dsh"
 [ -x "$DSH" ] || exit 0
 
 # --no-open: serve only; don't pop a browser tab at every login.
-exec "$DSH" web --no-open
+# --host 0.0.0.0: also reachable over WireGuard (wg-sdv-access). Relies on
+# the firewall only opening the port on that interface; the LAN stays closed.
+# --trusted-host: the /api browser-trust fence must accept the WireGuard
+# address, or remote pages load but every API call is rejected.
+exec "$DSH" web --no-open --host 0.0.0.0 --trusted-host 10.137.42.2
