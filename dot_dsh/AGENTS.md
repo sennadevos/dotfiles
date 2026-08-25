@@ -15,3 +15,17 @@ lockfiles or CI configs:
 - If you cannot look it up (offline, no network tool available), say so
   explicitly and either use an unpinned/latest reference or ask the user —
   do not silently pin a stale version.
+
+# Existence checks: never conclude "it doesn't exist" from filtered output
+
+When checking whether something exists (a model, package, version, release,
+API, config key):
+
+- Search for the exact name/id — grep/filter the complete data for the
+  specific string. Do not scan a listing by eye.
+- Never conclude absence from output that passed through `head`/`tail`,
+  pagination, a result cap, or a broad filter: truncation hides exactly the
+  entry you are looking for. Absence counts as proven only by an exact-match
+  search over complete output.
+- When you report that something does not exist, state what you searched and
+  how, so the check is auditable.
