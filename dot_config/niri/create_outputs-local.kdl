@@ -1,0 +1,7 @@
+// Machine-local niri output layout — NOT synced by chezmoi (created once,
+// then left alone). Fill with output blocks, e.g.:
+//   output "eDP-1" {
+//       scale 1.25
+//       position x=0 y=0
+//   }
+// Current state: `niri msg outputs`. Positions are logical coordinates.

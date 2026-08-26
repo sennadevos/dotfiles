@@ -69,6 +69,11 @@ input {
     focus-follows-mouse max-scroll-amount="0%"
 }
 
+// Machine-local output layout (positions, scales, transforms) lives in
+// outputs-local.kdl: chezmoi creates it empty once (create_ prefix) and
+// never overwrites it, so per-machine monitor config stays out of the repo.
+include "outputs-local.kdl"
+
 // You can configure outputs by their name, which you can find
 // by running `niri msg outputs` while inside a niri instance.
 // The built-in laptop monitor is usually called "eDP-1".
