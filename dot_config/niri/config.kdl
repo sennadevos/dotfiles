@@ -327,6 +327,16 @@ window-rule {
     open-floating true
 }
 
+// kDrive's tray-click popup is an X11 override-redirect surface (via
+// xwayland-satellite) that opens mid-screen and is invisible to window
+// rules. The same UI opened as `kdrive --synthesis` (Mod+Shift+D) maps as
+// a normal window; float it under the tray where the popup belongs.
+window-rule {
+    match app-id="^kDrive_client$"
+    open-floating true
+    default-floating-position x=8 y=8 relative-to="top-right"
+}
+
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
 /-window-rule {
@@ -368,6 +378,9 @@ binds {
     Mod+E hotkey-overlay-title="Open File Manager: thunar" { spawn "thunar"; }
     Mod+B hotkey-overlay-title="Open Browser: firefox" { spawn "firefox"; }
     Mod+M hotkey-overlay-title="Open Markdown Editor: marktext" { spawn "/home/sjdevos/.local/bin/marktext-launch" "--new-window"; }
+    // Tray-click on kDrive shows an unusable mid-screen popup (see the
+    // kDrive_client window-rule); this opens the same status window sanely.
+    Mod+Shift+D hotkey-overlay-title="kDrive Status: synthesis" { spawn "/home/sjdevos/.local/share/mise/shims/kdrive" "--synthesis"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
