@@ -8,6 +8,11 @@
 # corrupter is mise-managed; niri's PATH doesn't include the shims.
 CORRUPTER="$HOME/.local/share/mise/shims/corrupter"
 
+# Glitch intensity ~35% of corrupter's defaults (mag 7, boffset 30,
+# lag .005, meanabber 10, stdoffset 10, add 37, lr -7, lb 3): screen
+# content stays recognizable behind mild displacement and fringing.
+GLITCH="-mag 2.5 -boffset 10 -lag 0.002 -meanabber 3 -stdoffset 3.5 -add 13 -lr -2.5 -lb 1"
+
 dir=$(mktemp -d) || exec swaylock
 # Screenshots are sensitive: 0700 tmpdir, removed after unlock (no exec
 # before swaylock, or the trap dies with the shell).
@@ -15,7 +20,7 @@ trap 'rm -rf "$dir"' EXIT INT TERM
 
 set --
 for out in $(niri msg outputs | sed -n 's/^Output .* (\(.*\))$/\1/p'); do
-    if grim -o "$out" - | "$CORRUPTER" - > "$dir/$out.png" \
+    if grim -o "$out" - | "$CORRUPTER" $GLITCH - > "$dir/$out.png" \
        && [ -s "$dir/$out.png" ]; then
         set -- "$@" -i "$out:$dir/$out.png"
     fi
