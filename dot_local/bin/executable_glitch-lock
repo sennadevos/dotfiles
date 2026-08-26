@@ -1,0 +1,24 @@
+#!/bin/sh
+# Glitched lockscreen: screenshot every output, distort it with corrupter,
+# and lock with each result as that output's swaylock background.
+#
+# Fail-open: a failed capture only costs that output its image — the script
+# must always reach swaylock, so no set -e and every step is best-effort.
+
+# corrupter is mise-managed; niri's PATH doesn't include the shims.
+CORRUPTER="$HOME/.local/share/mise/shims/corrupter"
+
+dir=$(mktemp -d) || exec swaylock
+# Screenshots are sensitive: 0700 tmpdir, removed after unlock (no exec
+# before swaylock, or the trap dies with the shell).
+trap 'rm -rf "$dir"' EXIT INT TERM
+
+set --
+for out in $(niri msg outputs | sed -n 's/^Output .* (\(.*\))$/\1/p'); do
+    if grim -o "$out" - | "$CORRUPTER" - > "$dir/$out.png" \
+       && [ -s "$dir/$out.png" ]; then
+        set -- "$@" -i "$out:$dir/$out.png"
+    fi
+done
+
+swaylock -s fill "$@"
