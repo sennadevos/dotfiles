@@ -27,6 +27,24 @@ orchestrator: scope the task, delegate, verify the result. Do the work
 yourself only when it is small, conversational, or the delegation tools are
 unavailable.
 
+## Always pass an explicit Claude model, chosen per task
+
+When delegating via `product_delegate`, always set the `model` parameter
+explicitly — never omit it and inherit the product default. These are exact
+model ids; pass them verbatim:
+
+- `claude-sonnet-5` — routine, well-scoped work: mechanical edits,
+  boilerplate, small fixes, documentation, straightforward single-file
+  implementation.
+- `claude-opus-5` — the default for substantial work: multi-file
+  implementation, refactoring, code review, ordinary debugging.
+- `claude-fable-5` — reserve for the hardest tasks: architecture decisions,
+  cross-cutting or elusive bugs, and retries of work a `claude-opus-5`
+  attempt got wrong.
+
+Pair it with `reasoning_effort`: `low` for mechanical tasks, `high` for
+review, debugging, and anything correctness-critical, `medium` otherwise.
+
 # Existence checks: never conclude "it doesn't exist" from filtered output
 
 When checking whether something exists (a model, package, version, release,
