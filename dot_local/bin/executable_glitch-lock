@@ -18,10 +18,18 @@ dir=$(mktemp -d) || exec swaylock
 # before swaylock, or the trap dies with the shell).
 trap 'rm -rf "$dir"' EXIT INT TERM
 
+# Capture and corrupt every output in parallel — sequentially this takes
+# ~0.5s per output, which is a long wait for a lock key. grim -l 1: fast
+# PNG compression; the files are throwaways, size doesn't matter.
+outputs=$(niri msg outputs | sed -n 's/^Output .* (\(.*\))$/\1/p')
+for out in $outputs; do
+    grim -l 1 -o "$out" - | "$CORRUPTER" $GLITCH - > "$dir/$out.png" &
+done
+wait
+
 set --
-for out in $(niri msg outputs | sed -n 's/^Output .* (\(.*\))$/\1/p'); do
-    if grim -o "$out" - | "$CORRUPTER" $GLITCH - > "$dir/$out.png" \
-       && [ -s "$dir/$out.png" ]; then
+for out in $outputs; do
+    if [ -s "$dir/$out.png" ]; then
         set -- "$@" -i "$out:$dir/$out.png"
     fi
 done
