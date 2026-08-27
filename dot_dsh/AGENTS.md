@@ -45,6 +45,14 @@ model ids; pass them verbatim:
 Pair it with `reasoning_effort`: `low` for mechanical tasks, `high` for
 review, debugging, and anything correctness-critical, `medium` otherwise.
 
+# Install toolchains and libraries in containers, not on the host
+
+This is an ostree-booted Fedora and the user wants toolchains, SDKs, runtimes,
+and dev libraries inside containers — use `distrobox` (see
+`~/.config/distrobox/distrobox.ini`), not `sudo dnf`/`rpm-ostree install`.
+`mise` is acceptable only workspace-scoped (a project-local `mise.toml`, so the
+tools go away with the project) — never installed globally onto the system.
+
 # Existence checks: never conclude "it doesn't exist" from filtered output
 
 When checking whether something exists (a model, package, version, release,
