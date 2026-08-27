@@ -28,6 +28,16 @@ llm-pi-ai:
             low: low
             medium: medium
             high: high
+        - id: z-ai/glm-5.3-flash
+          name: GLM 5.3 Flash
+          contextWindow: 1048576
+          maxTokens: 131072
+          # No `off:`/`medium:` — mandatory reasoning; OpenRouter only lists
+          # low/high/max for this model (default effort is max).
+          reasoningEfforts:
+            low: low
+            high: high
+            max: max
 
 # The key itself lives in ~/.dsh/.credentials.yaml, which is deliberately NOT
 # managed by chezmoi (local-only secret; see .chezmoiignore). On a new machine
@@ -38,6 +48,6 @@ llm-pi-ai:
 
 agent-default-model:
   provider: openrouter-fresh
-  model: google/gemini-3.7-flash
+  model: z-ai/glm-5.3-flash
 ui-onboarding:
   welcomeNoticeVersion: 2026-08-13.1
