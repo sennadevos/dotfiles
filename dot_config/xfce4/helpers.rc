@@ -1,0 +1,6 @@
+# Xfce "preferred applications". Thunar's Open Terminal Here resolves the
+# terminal through `exo-open --launch TerminalEmulator`, which reads this file
+# and looks the id up in ~/.local/share/xfce4/helpers/<id>.desktop (Fedora's
+# exo package ships no helper definitions of its own, so kitty.desktop there
+# is ours).
+TerminalEmulator=kitty
