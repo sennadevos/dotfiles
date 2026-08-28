@@ -625,6 +625,10 @@ binds {
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 
+    // Noctalia's own capture (saves to ~/Pictures/screenshot_<date>_<time>.png)
+    // rather than niri's built-in, so the shell's editor/notification is used.
+    Mod+Shift+S hotkey-overlay-title="Screenshot a Region: noctalia" { spawn "noctalia" "msg" "screenshot-region"; }
+
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here
     // so they may, for example, forward the key presses as-is to a remote machine.
