@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Thunar custom actions.
+
+  "Open Terminal Here" launches kitty directly rather than going through the
+  exo-open preferred-application indirection Thunar ships by default. That
+  path is broken on this system: libexo delegates the launch to
+  xfce4-mime-helper, which lives in the xfce4-settings package and is not
+  installed, so it always failed with "Failed to launch preferred application
+  for category TerminalEmulator" no matter how the xfce helper files were set
+  up.
+
+  The command uses the absolute mise shim path, because Thunar inherits niri's
+  PATH and that has no mise shims. Same reason the Mod+T binding in
+  niri/config.kdl spells the path out.
+
+  (Note: XML comments may not contain a double hyphen, hence the prose above
+  names flags without them.)
+-->
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1786896200544117-1</unique-id>
+	<command>{{ .chezmoi.homeDir }}/.local/share/mise/shims/kitty --directory %f</command>
+	<description>Open kitty in this folder</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+</actions>

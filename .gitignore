@@ -3,9 +3,4 @@
 /dot_bashrc.d/
 /dot_claude/
 /dot_config/private_kglobalshortcutsrc
-# Contents only (not the directory itself), so a subdirectory can be re-included
-# below — git cannot re-include anything inside a wholly excluded directory.
-/dot_local/share/*
-# …except the xfce helper definition: it is real configuration, and without it
-# the TerminalEmulator id in dot_config/xfce4/helpers.rc resolves to nothing.
-!/dot_local/share/xfce4/
+/dot_local/share/
