@@ -14,6 +14,13 @@
   PATH and that has no mise shims. Same reason the Mod+T binding in
   niri/config.kdl spells the path out.
 
+  "Edit in Neovim" spells out BOTH shim paths for the same reason: kitty execs
+  the program it is given, so a bare "nvim" would be resolved against the PATH
+  kitty inherited from Thunar, which has no mise shims either. Every file type
+  is listed so the entry appears for any file, including extensionless ones and
+  those with no mime association at all. It takes %F rather than %f, so
+  selecting several files opens them as buffers in one session.
+
   (Note: XML comments may not contain a double hyphen, hence the prose above
   names flags without them.)
 -->
@@ -29,5 +36,21 @@
 	<patterns>*</patterns>
 	<startup-notify/>
 	<directories/>
+</action>
+<action>
+	<icon>accessories-text-editor</icon>
+	<name>Edit in Neovim</name>
+	<submenu></submenu>
+	<unique-id>1788158400000000-2</unique-id>
+	<command>{{ .chezmoi.homeDir }}/.local/share/mise/shims/kitty {{ .chezmoi.homeDir }}/.local/share/mise/shims/nvim %F</command>
+	<description>Open in neovim in a kitty window</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<text-files/>
+	<other-files/>
+	<image-files/>
+	<audio-files/>
+	<video-files/>
 </action>
 </actions>
