@@ -4,4 +4,15 @@
 # (16 GB peak observed on 2026-08-24), freezing the system for minutes.
 # The rlimit survives Electron's self-move into its own systemd scope.
 ulimit -c 0
+
+# Always open a new window. MarkText is single-instance, so without this a file
+# opened from Thunar becomes a tab in whichever window already exists — which
+# may be on another workspace or monitor, so the file silently appears not to
+# open at all. A new window maps focused, so it lands where you are looking.
+# Idempotent: the niri Mod+M binding passes the flag itself.
+case " $* " in
+    *" --new-window "* | *" -n "*) ;;
+    *) set -- --new-window "$@" ;;
+esac
+
 exec "$HOME/.local/bin/mise" exec github:marktext/marktext -- marktext "$@"
