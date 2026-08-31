@@ -29,7 +29,12 @@
           # credential-shaped variables out of the inherited environment. So
           # read it from the one file that holds it — a lookup rather than a
           # copy, so rotating the key stays a single edit in .credentials.yaml.
+          #
+          # `!!js` runs through `new Function`, i.e. global scope: there is no
+          # `require` here (that throws and fails plugin load). process is
+          # global, so reach the builtin through it instead.
           OPENROUTER_API_KEY: !!js >
-            (require('node:fs').readFileSync(`${process.env.HOME}/.dsh/.credentials.yaml`, 'utf8')
+            (process.getBuiltinModule('node:fs')
+            .readFileSync(process.env.HOME + '/.dsh/.credentials.yaml', 'utf8')
             .match(/^\s*OPENROUTER_API_KEY:\s*(.+)$/m)?.[1] ?? '')
             .trim().replace(/^["']|["']$/g, '')
