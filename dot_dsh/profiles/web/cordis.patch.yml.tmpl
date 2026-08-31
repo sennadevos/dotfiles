@@ -8,3 +8,28 @@
     # roles: the shipped `general` role runs Claude Code with
     # --dangerously-skip-permissions; ours cap at standard permissions.
     rolesDir: {{ .chezmoi.homeDir }}/.dsh/roles
+
+# MCP servers — one dsh-mcp-client instance per server. Their tools reach the
+# model as mcp__<serverName>__<toolName>.
+- insert:
+    # OpenRouter multimodal: vision, audio and video analysis/generation plus
+    # model-catalog lookup (19 tools) via mcp__openrouter__*.
+    - id: mcp-openrouter-multimodal
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: openrouter
+        transport: stdio
+        command: npx
+        # Pinned deliberately: a bare `-y <pkg>` silently upgrades the server
+        # under us on every spawn.
+        args: ['-y', '@stabgan/openrouter-mcp-multimodal@4.6.2']
+        env:
+          # The key is NOT reachable as process.env here: it lives in the
+          # credential store, and the subprocess seam additionally scrubs
+          # credential-shaped variables out of the inherited environment. So
+          # read it from the one file that holds it — a lookup rather than a
+          # copy, so rotating the key stays a single edit in .credentials.yaml.
+          OPENROUTER_API_KEY: !!js >
+            (require('node:fs').readFileSync(`${process.env.HOME}/.dsh/.credentials.yaml`, 'utf8')
+            .match(/^\s*OPENROUTER_API_KEY:\s*(.+)$/m)?.[1] ?? '')
+            .trim().replace(/^["']|["']$/g, '')
