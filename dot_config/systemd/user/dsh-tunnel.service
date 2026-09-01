@@ -1,0 +1,31 @@
+[Unit]
+Description=SSH tunnel to the DeepSeek Harness web UI on hp-probook
+# Silent no-op on the server itself: hp-probook runs dsh-web on 3080, so a
+# tunnel there would collide. The condition makes systemd skip the start
+# without marking the unit failed.
+ConditionHost=!hp-probook
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# -N: forward only, no remote command. ExitOnForwardFailure turns a refused
+# forward into a clean failure that Restart= retries, instead of an idle
+# session holding nothing. ServerAlive* drops the tunnel promptly when the
+# VPN goes away, so the restart loop rebuilds it rather than leaving a
+# black-hole listener on 3080.
+#
+# The forward lands on the client's own loopback on purpose: dsh gates the
+# settings store, directory picker and open-path on the page hostname, so
+# only a 127.0.0.1 origin gets the full UI.
+ExecStart=/usr/bin/ssh -N \
+    -o ExitOnForwardFailure=yes \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
+    -o StrictHostKeyChecking=accept-new \
+    -L 3080:127.0.0.1:3080 \
+    sjdevos@10.137.42.2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
