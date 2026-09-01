@@ -13,6 +13,9 @@ version_list_url = "https://api.github.com/repos/jgraph/drawio-desktop/releases"
 version_json_path = ".[].tag_name"
 version_order = "semver"
 bin = "drawio"
+# Installs the launcher entry, icons and the *.drawio MIME definition out of
+# the AppImage, so double-click opens drawio instead of a text editor.
+postinstall = "{{xdg_config_home}}/mise/tasks/extract-drawio-desktop.sh"
 
 [tools."http:drawio".platforms]
 linux-x64   = { url = "https://github.com/jgraph/drawio-desktop/releases/download/v{{version}}/drawio-x86_64-{{version}}.AppImage" }
