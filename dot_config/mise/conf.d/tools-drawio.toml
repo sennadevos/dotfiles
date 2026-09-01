@@ -1,0 +1,19 @@
+# drawio desktop, for viewing/editing .drawio files and for headless export
+# (`drawio --export --format png|svg|pdf`) used by the dsh drawio skill.
+#
+# AppImage through the http backend, same shape as tools-kdrive.toml: keeps it
+# user-level and removable, with no rpm-ostree layering and no reboot.
+#
+# mise strips the leading "v" from the tag, so {{version}} is e.g. 31.3.2 while
+# the release tag itself is v31.3.2 — hence "v{{version}}" in the path and a
+# bare "{{version}}" in the filename.
+[tools."http:drawio"]
+version = "latest"
+version_list_url = "https://api.github.com/repos/jgraph/drawio-desktop/releases"
+version_json_path = ".[].tag_name"
+version_order = "semver"
+bin = "drawio"
+
+[tools."http:drawio".platforms]
+linux-x64   = { url = "https://github.com/jgraph/drawio-desktop/releases/download/v{{version}}/drawio-x86_64-{{version}}.AppImage" }
+linux-arm64 = { url = "https://github.com/jgraph/drawio-desktop/releases/download/v{{version}}/drawio-arm64-{{version}}.AppImage" }
