@@ -21,6 +21,18 @@
   those with no mime association at all. It takes %F rather than %f, so
   selecting several files opens them as buffers in one session.
 
+  "Copy Path" puts the absolute path of the selection on the clipboard. It
+  pipes through printf rather than passing the paths to wl-copy directly so
+  that a multi-file selection arrives newline separated instead of space
+  joined, which keeps paths containing spaces usable. The trim-newline flag
+  drops the trailing newline printf leaves after the final entry, so copying a
+  single file yields a bare path with nothing to strip after pasting. It is
+  listed for directories as well as every file category, since the path of a
+  folder is just as worth copying.
+
+  This one assumes Wayland: wl-copy talks the wlr data-control protocol and has
+  no X11 fallback.
+
   (Note: XML comments may not contain a double hyphen, hence the prose above
   names flags without them.)
 -->
@@ -47,6 +59,23 @@
 	<range></range>
 	<patterns>*</patterns>
 	<startup-notify/>
+	<text-files/>
+	<other-files/>
+	<image-files/>
+	<audio-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>edit-copy</icon>
+	<name>Copy Path</name>
+	<submenu></submenu>
+	<unique-id>1788355755000000-3</unique-id>
+	<command>sh -c 'printf "%s\n" "$@" | /usr/bin/wl-copy --trim-newline' _ %F</command>
+	<description>Copy the full path to the clipboard</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
 	<text-files/>
 	<other-files/>
 	<image-files/>
