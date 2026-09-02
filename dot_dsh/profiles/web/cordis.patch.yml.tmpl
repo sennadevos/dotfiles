@@ -38,3 +38,30 @@
             .readFileSync(process.env.HOME + '/.dsh/.credentials.yaml', 'utf8')
             .match(/^\s*OPENROUTER_API_KEY:\s*(.+)$/m)?.[1] ?? '')
             .trim().replace(/^["']|["']$/g, '')
+
+    # Chrome DevTools Protocol against the containerised Chromium that Mod+B and
+    # the default-browser handler both open — 29 tools via mcp__chrome__*
+    # (list_pages, navigate_page, click, fill_form, evaluate_script,
+    # take_snapshot, list_network_requests, performance_start_trace, ...).
+    - id: mcp-chrome-devtools
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: chrome
+        transport: stdio
+        command: npx
+        # Pinned deliberately, for the same reason as the server above.
+        args:
+          - '-y'
+          - 'chrome-devtools-mcp@1.8.0'
+          # Attach to the ALREADY-RUNNING browser rather than launching a fresh
+          # one. This is the whole point: a launched instance would get its own
+          # empty profile, while attaching reaches the live logged-in sessions.
+          # The port is the one baked into the exported desktop entry; see
+          # distrobox/distrobox.ini under [apps] for why those flags matter.
+          - '--browserUrl'
+          - 'http://127.0.0.1:9222'
+          # Both of these default to ON and both phone home: usage statistics to
+          # Google, and the performance tools send trace URLs to the CrUX API.
+          # Off, since this browser holds real logged-in sessions.
+          - '--usageStatistics=false'
+          - '--no-performance-crux'

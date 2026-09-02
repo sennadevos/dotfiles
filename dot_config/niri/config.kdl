@@ -381,7 +381,11 @@ binds {
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "/home/sjdevos/.local/share/mise/shims/kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: noctalia" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+E hotkey-overlay-title="Open File Manager: thunar" { spawn "thunar"; }
-    Mod+B hotkey-overlay-title="Open Browser: firefox" { spawn "firefox"; }
+    // Launches the exported desktop entry rather than the binary directly, so
+    // the four load-bearing Chromium flags stay defined in exactly one place.
+    // They are documented in distrobox/distrobox.ini under [apps]; dropping the
+    // user-data-dir or no-first-run one silently kills remote debugging.
+    Mod+B hotkey-overlay-title="Open Browser: chromium" { spawn "gtk-launch" "apps-chromium-browser"; }
     Mod+M hotkey-overlay-title="Open Markdown Editor: marktext" { spawn "/home/sjdevos/.local/bin/marktext-launch" "--new-window"; }
     // Tray-click on kDrive shows an unusable mid-screen popup (see the
     // kDrive_client window-rule); this opens the same status window sanely.
