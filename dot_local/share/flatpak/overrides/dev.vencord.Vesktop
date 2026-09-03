@@ -1,0 +1,7 @@
+# Read-only access to the whole home folder, so vesktop's file chooser can
+# attach files from anywhere in ~ (its manifest only grants Pictures/Videos
+# read and Downloads read-write). :ro keeps a chat client from being able to
+# modify or delete personal files; ~/Downloads stays writable via the
+# app's own xdg-download grant.
+[Context]
+filesystems=home:ro;

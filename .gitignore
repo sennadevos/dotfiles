@@ -3,4 +3,8 @@
 /dot_bashrc.d/
 /dot_claude/
 /dot_config/private_kglobalshortcutsrc
-/dot_local/share/
+# Ignore local-only .local/share state, but keep flatpak permission
+# overrides in the repo: they are real configuration that must follow
+# the dotfiles to other machines.
+/dot_local/share/*
+!/dot_local/share/flatpak/
