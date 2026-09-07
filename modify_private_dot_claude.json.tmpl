@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# chezmoi modify_ script: owns exactly one key inside ~/.claude.json.
+#
+# Why a modify_ script instead of tracking the file: ~/.claude.json is ~70KB of
+# Claude Code state -- machineID, userID, oauthAccount, per-project history and
+# prompt caches, feature-flag caches, counters. None of that may go near a
+# public dotfiles repo, and it churns on every session. But the MCP server
+# declaration in it is real configuration that has to reproduce on every
+# machine, so .gitignore's "Claude Code state stays local" rule needs one
+# surgical exception rather than a blanket one.
+#
+# chezmoi feeds the current target file on this script's stdin and takes its
+# stdout as the new contents, so everything not touched below passes through
+# byte for byte.
+#
+# The output format deliberately matches what Claude Code itself writes --
+# indent of 2, no ASCII escaping, no trailing newline -- so that when the entry
+# is already correct the output is identical to the input and `chezmoi status`
+# stays quiet instead of reporting a permanent diff.
+#
+# What it declares: chrome-devtools-mcp attached to the ALREADY-RUNNING
+# containerised Chromium on port 9222, the same setup the dsh web profile uses
+# (see .dsh/profiles/web/cordis.patch.yml). Attaching rather than launching is
+# the whole point: a launched instance gets an empty profile, while attaching
+# reaches the live logged-in sessions. The port is the one baked into the
+# exported desktop entry -- see distrobox/distrobox.ini under [apps], and note
+# that EVERY chromium launcher must carry the flag or the port never opens.
+#
+# usageStatistics and performance-crux both default to ON and both phone home
+# (usage to Google, trace URLs to the CrUX API); off, because this browser
+# holds real logged-in sessions.
+#
+# npx is spelled as an absolute mise shim path: a bare `npx` resolves against
+# whatever PATH the spawning process happened to have, which on this host is
+# not guaranteed to include the mise shims.
+
+import json
+import sys
+
+SERVER_NAME = "chrome"
+SERVER = {
+    "type": "stdio",
+    "command": "{{ .chezmoi.homeDir }}/.local/share/mise/shims/npx",
+    "args": [
+        "-y",
+        # Pinned deliberately: a bare `-y <pkg>` silently upgrades the server
+        # on every spawn.
+        "chrome-devtools-mcp@1.8.0",
+        "--browserUrl",
+        "http://127.0.0.1:9222",
+        "--usageStatistics=false",
+        "--no-performance-crux",
+    ],
+    "env": {},
+}
+
+raw = sys.stdin.read()
+
+if not raw.strip():
+    # Fresh machine: no ~/.claude.json yet. Emit just our key and let Claude
+    # Code fill in the rest on first run.
+    data = {}
+else:
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Never destroy a file we cannot parse -- pass it through untouched and
+        # leave the declaration unapplied rather than clobbering real state.
+        sys.stdout.write(raw)
+        sys.exit(0)
+
+if not isinstance(data, dict):
+    sys.stdout.write(raw)
+    sys.exit(0)
+
+servers = data.get("mcpServers")
+if not isinstance(servers, dict):
+    servers = {}
+    data["mcpServers"] = servers
+servers[SERVER_NAME] = SERVER
+
+sys.stdout.write(json.dumps(data, indent=2, ensure_ascii=False))

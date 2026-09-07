@@ -7,6 +7,9 @@
 /dot_claude/*
 !/dot_claude/CLAUDE.md.tmpl
 !/dot_claude/skills/
+# ~/.claude.json is NOT ignored-but-untracked like the above: it is state and
+# config mixed in one file, so modify_private_dot_claude.json.tmpl manages the
+# single mcpServers key and passes the rest through.
 /dot_config/private_kglobalshortcutsrc
 # Ignore local-only .local/share state, but keep flatpak permission
 # overrides in the repo: they are real configuration that must follow
