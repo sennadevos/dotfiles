@@ -30,6 +30,17 @@
   listed for directories as well as every file category, since the path of a
   folder is just as worth copying.
 
+  The printf conversion spec is written doubled, as two percent signs before
+  the s. Thunar expands the command in two passes: its own parser handles the
+  d/D/n/N codes and leaves anything it does not know alone, but the f/F/u/U
+  codes are then expanded by xfce_expand_desktop_entry_field_codes() from
+  libxfce4util, which follows the desktop entry spec and DELETES unrecognised
+  codes. A single percent s was silently eaten there, leaving printf with a
+  format of just a newline, so every path printed as an empty line and the
+  trim-newline flag then reduced the whole thing to nothing: the action
+  appeared to work and the clipboard stayed empty. Doubling it survives that
+  pass and arrives at the shell as a single percent s.
+
   This one assumes Wayland: wl-copy talks the wlr data-control protocol and has
   no X11 fallback.
 
@@ -70,7 +81,7 @@
 	<name>Copy Path</name>
 	<submenu></submenu>
 	<unique-id>1788355755000000-3</unique-id>
-	<command>sh -c 'printf "%s\n" "$@" | /usr/bin/wl-copy --trim-newline' _ %F</command>
+	<command>sh -c 'printf "%%s\n" "$@" | /usr/bin/wl-copy --trim-newline' _ %F</command>
 	<description>Copy the full path to the clipboard</description>
 	<range></range>
 	<patterns>*</patterns>
