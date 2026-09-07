@@ -6,11 +6,10 @@ local map = vim.keymap.set
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Better navigation
-map('n', '<C-h>', '<C-w>h', { desc = 'Move to left window' })
-map('n', '<C-j>', '<C-w>j', { desc = 'Move to lower window' })
-map('n', '<C-k>', '<C-w>k', { desc = 'Move to upper window' })
-map('n', '<C-l>', '<C-w>l', { desc = 'Move to right window' })
+-- Window navigation with C-h/j/k/l is NOT set here: vim-tmux-navigator owns
+-- those maps (see config/plugins.lua) so that the same keys also step out
+-- into the surrounding tmux panes. Plain <C-w>h style maps here would stop
+-- at vim's edge, and whichever loaded last would silently win.
 
 -- Quick save/quit
 map('n', '<leader>w', '<cmd>w<cr>', { desc = 'Save' })
