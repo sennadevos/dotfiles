@@ -8,3 +8,6 @@
 # the dotfiles to other machines.
 /dot_local/share/*
 !/dot_local/share/flatpak/
+# Chromium PWA launchers are hand-made (Chromium in the apps distrobox cannot
+# run the host's xdg-desktop-menu integration), so nothing regenerates them.
+!/dot_local/share/applications/

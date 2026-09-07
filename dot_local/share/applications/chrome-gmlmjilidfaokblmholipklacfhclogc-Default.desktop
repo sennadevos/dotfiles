@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=kSuite
+Comment=Infomaniak kSuite
+Exec=/usr/bin/distrobox-enter -n apps -- /usr/bin/chromium-browser --user-data-dir=/home/sjdevos/.local/share/chromium --ozone-platform-hint=auto --no-first-run --remote-debugging-port=9222 --profile-directory=Default --app-id=gmlmjilidfaokblmholipklacfhclogc
+Icon=chrome-gmlmjilidfaokblmholipklacfhclogc-Default
+StartupWMClass=chrome-gmlmjilidfaokblmholipklacfhclogc-Default
+StartupNotify=true
+NoDisplay=false
+Categories=Office;
+X-Desktop-File-Install-Version=0.28
