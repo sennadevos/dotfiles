@@ -1,7 +1,10 @@
 # Pre-existing chezmoi files (managed locally, not pushed to this repo)
 /dot_bashrc
 /dot_bashrc.d/
-/dot_claude/
+# Claude Code state stays local, but skills are real configuration shared with
+# dsh through .chezmoitemplates/skills/, so they travel with the dotfiles.
+/dot_claude/*
+!/dot_claude/skills/
 /dot_config/private_kglobalshortcutsrc
 # Ignore local-only .local/share state, but keep flatpak permission
 # overrides in the repo: they are real configuration that must follow
