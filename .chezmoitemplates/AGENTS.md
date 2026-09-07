@@ -15,7 +15,7 @@ lockfiles or CI configs:
 - If you cannot look it up (offline, no network tool available), say so
   explicitly and either use an unpinned/latest reference or ask the user —
   do not silently pin a stale version.
-
+{{ if eq .harness "dsh" }}
 # Delegate heavy work to the Claude Code subagent (token economics)
 
 When the product-subagents tools (`product_delegate`, `product_roles`, …) are
@@ -44,14 +44,24 @@ model ids; pass them verbatim:
 
 Pair it with `reasoning_effort`: `low` for mechanical tasks, `high` for
 review, debugging, and anything correctness-critical, `medium` otherwise.
+{{ end }}
+# Installing software: distrobox for toolchains, mise for permanent tools
 
-# Install toolchains and libraries in containers, not on the host
+This is an ostree-booted Fedora. Never `sudo dnf` or `rpm-ostree install`.
+Pick the mechanism by lifetime:
 
-This is an ostree-booted Fedora and the user wants toolchains, SDKs, runtimes,
-and dev libraries inside containers — use `distrobox` (see
-`~/.config/distrobox/distrobox.ini`), not `sudo dnf`/`rpm-ostree install`.
-`mise` is acceptable only workspace-scoped (a project-local `mise.toml`, so the
-tools go away with the project) — never installed globally onto the system.
+- **Local or temporary: distrobox.** Toolchains, SDKs, runtimes, dev
+  libraries, build dependencies, anything a project or experiment needs —
+  see `~/.config/distrobox/distrobox.ini`. Never a project-local `mise.toml`
+  and never mise for something that should disappear with the project.
+- **Permanent, user-space or system-wide: mise, globally.** A CLI or desktop
+  app the user wants installed, or data such as a spellcheck dictionary, is
+  declared in `~/.config/mise/conf.d/tools-<name>.toml` (http backend with
+  the version, `checksum = "sha256:…"`, `size`, `strip_components` where the
+  backend allows; see the kitty/kdrive/drawio entries). That file MUST be
+  committed to chezmoi and pushed to GitHub in the same change. A mise tool
+  that exists only on this machine is a bug: the whole point is that the
+  install is declared once and reproduced everywhere.
 
 # Existence checks: never conclude "it doesn't exist" from filtered output
 
@@ -66,3 +76,14 @@ API, config key):
   search over complete output.
 - When you report that something does not exist, state what you searched and
   how, so the check is auditable.
+
+# Work inside the workspace
+
+The workspace is the working area: everything produced stays inside it. Never
+create, move or delete anything outside it without explicit permission — name
+the exact path and ask first. Editing an existing file outside is fine when
+asked; the rule is against creating new files and directories unasked.
+`/home`, `/tmp`, dotfile directories, and a container's own system paths
+(`/opt`, `/usr`, `/etc`) count as outside. The
+workspace mounted into a container is still the workspace, so building or
+running tools there needs no permission.
