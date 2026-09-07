@@ -1,0 +1,119 @@
+#!/bin/bash
+set -euo pipefail
+# Spellcheck the word in the clipboard: fuzzel front-end over hunspell (EN + NL).
+#
+# The desktop "right-click → suggestions" gesture, but for any window: bound to
+# a niri key, it reads the clipboard, says so when the word is fine, and
+# otherwise pops a fuzzel list of suggestions. Picking one copies it back to the
+# clipboard so it can be pasted over the original.
+#
+# Dictionaries: en_US comes from the host (/usr/share/hunspell). Dutch is not
+# layered on the atomic host; mise fetches it (http:hunspell-nl, see
+# ~/.config/mise/conf.d/tools-hunspell-nl.toml) and hunspell reaches it through
+# DICPATH, with ~/.local/share/hunspell as the fallback for hand-placed files.
+#
+# Each language is checked in its own hunspell run rather than one combined
+# `-d en_US,nl`, so suggestions can be labelled and a word that is valid in
+# either language counts as correct.
+#
+# hunspell -a (ispell pipe mode) answers one line per word:
+#   *   correct       + root   correct via affix       -   correct compound
+#   & w N off: s1, s2, ...     misspelled, N suggestions
+#   # w off                    misspelled, no suggestions
+
+LANGS=(en_US nl)
+MAX_LINES=15
+
+notify() { notify-send -a spell-menu -t 3000 "$@" >/dev/null 2>&1 || true; }
+die() { notify -u critical "Spellcheck" "$1"; exit 1; }
+
+for cmd in wl-paste wl-copy hunspell fuzzel; do
+    command -v "$cmd" >/dev/null || die "$cmd is not installed"
+done
+
+# mise is not on niri's PATH, so resolve the dictionary directory without
+# relying on shims; fall back to the manual location if the tool is absent.
+if [ -z "${DICPATH:-}" ]; then
+    mise_bin=$(command -v mise || echo "$HOME/.local/bin/mise")
+    DICPATH=$("$mise_bin" where http:hunspell-nl 2>/dev/null || true)
+    [ -n "$DICPATH" ] || DICPATH="$HOME/.local/share/hunspell"
+fi
+export DICPATH
+
+# First whitespace-separated token, with surrounding punctuation/quotes
+# stripped, so "huys," or ‘recieve’ check the bare word. Marks inside the word
+# (apostrophes, hyphens) are kept: hunspell handles them.
+clip=$(wl-paste --no-newline 2>/dev/null || true)
+clip=${clip//$'\r'/}
+read -r word _ <<<"$clip" || true
+word=$(printf '%s' "${word:-}" | sed -E "s/^[[:punct:]‘’“”«»]+//; s/[[:punct:]‘’“”«»]+\$//")
+[ -n "$word" ] || die "Clipboard has no word to check"
+trimmed=$(printf '%s' "$clip" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+extra=""
+[ "$word" = "$trimmed" ] || extra=" (first word of clipboard)"
+
+# Collect per-language verdicts. `correct` lists languages accepting the word;
+# `suggest` holds "rank<TAB>word<TAB>[lang]" lines, rank being hunspell's own
+# position within that language, so the languages can be interleaved below.
+correct=()
+checked=()
+suggest=""
+for lang in "${LANGS[@]}"; do
+    # -D lists what it would load and exits non-zero when the dictionary is
+    # missing, honouring the same search path (DICPATH first) as the real run.
+    hunspell -D -d "$lang" </dev/null 2>&1 | grep -q "^LOADED DICTIONARY:" || continue
+    checked+=("$lang")
+    # Line 1 is the version banner; line 2 is the verdict for our single word.
+    verdict=$(printf '%s\n' "$word" | hunspell -i utf-8 -d "$lang" -a 2>/dev/null | sed -n 2p)
+    case "$verdict" in
+        '*'*|'+'*|'-'*) correct+=("$lang") ;;
+        '&'*)
+            tag="[${lang%%_*}]"
+            list=${verdict#*: }
+            suggest+=$(printf '%s\n' "$list" | tr ',' '\n' \
+                | sed -E "s/^ +//; s/ +\$//; /^\$/d" \
+                | awk -v tag="$tag" '{ printf "%d\t%s\t%s\n", NR, $0, tag }')$'\n'
+            ;;
+        *) ;;  # '#' (no suggestions) or unexpected output: nothing to add
+    esac
+done
+[ "${#checked[@]}" -gt 0 ] || die "No dictionaries found (DICPATH=$DICPATH)"
+missing=$(comm -23 <(printf '%s\n' "${LANGS[@]}" | sort) \
+                   <(printf '%s\n' "${checked[@]}" | sort) | tr '\n' ' ')
+missing=${missing% }
+
+if [ "${#correct[@]}" -gt 0 ]; then
+    notify "✓ $word" "Correct in ${correct[*]}$extra${missing:+ · missing dictionary: $missing}"
+    exit 0
+fi
+
+# Interleave the languages by rank (best nl, best en, second nl, ...) so both
+# are visible at the top instead of one language's long tail burying the other.
+# Ties keep LANGS order; a suggestion offered by both languages is shown once.
+display=$(printf '%s' "$suggest" | sort -s -t $'\t' -k1,1n \
+    | awk -F'\t' 'NF && !seen[$2]++ { printf "%s\t%s\n", $2, $3 }')
+if [ -z "$display" ]; then
+    notify "✗ $word" "No suggestions in ${checked[*]}$extra"
+    exit 0
+fi
+
+count=$(printf '%s\n' "$display" | grep -c .)
+lines=$(( count < MAX_LINES ? count : MAX_LINES ))
+
+set +e
+choice=$(printf '%s\n' "$display" \
+    | fuzzel --dmenu \
+        --prompt="✗ $word → " \
+        --placeholder="pick a correction$extra${missing:+ · no $missing dictionary}" \
+        --lines="$lines" --width=40)
+action=$?
+set -e
+
+# 1 is a normal cancel (Esc / no match); anything else unexpected is an error.
+[ "$action" -eq 1 ] && exit 0
+[ -z "$choice" ] && exit 0
+[ "$action" -eq 0 ] || die "fuzzel exited unexpectedly ($action)"
+
+fixed=$(printf '%s' "$choice" | cut -f1)
+printf '%s' "$fixed" | wl-copy --trim-newline
+notify "Copied" "$fixed"

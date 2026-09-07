@@ -1,0 +1,20 @@
+# Dutch hunspell dictionary (OpenTaal, the upstream of Debian/Fedora hunspell-nl).
+#
+# Two data files, no binaries: the atomic host ships only English dictionaries
+# under /usr/share/hunspell and layering hunspell-nl with rpm-ostree is not
+# worth a deployment for 2.5 MB of text. mise's http backend fetches the tagged
+# source archive pinned to a version and sha256, same as kitty/kdrive/drawio.
+# Consumers point DICPATH at `mise where http:hunspell-nl` (see spell-menu).
+#
+# Pinned on purpose: this is data, and a silently changed dictionary is worse
+# than a stale one. Bump the version and checksum together.
+[tools."http:hunspell-nl"]
+version = "2.20.19"
+url = "https://github.com/OpenTaal/opentaal-hunspell/archive/refs/tags/{{ version }}.tar.gz"
+format = "tar.gz"
+strip_components = 1
+checksum = "sha256:0a86ec393450d7070bd69ee83f69c37ff27dbbc5fe684803375f113d7128bd87"
+size = 1217759
+version_list_url = "https://api.github.com/repos/OpenTaal/opentaal-hunspell/tags"
+version_json_path = ".[].name"
+version_order = "semver"
