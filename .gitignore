@@ -7,6 +7,10 @@
 /dot_claude/*
 !/dot_claude/CLAUDE.md.tmpl
 !/dot_claude/skills/
+# Same reasoning for the hooks and for the slice of settings.json chezmoi owns:
+# both are configuration that has to reproduce on another machine, not state.
+!/dot_claude/hooks/
+!/dot_claude/modify_settings.json.tmpl
 # ~/.claude.json is NOT ignored-but-untracked like the above: it is state and
 # config mixed in one file, so modify_private_dot_claude.json.tmpl manages the
 # single mcpServers key and passes the rest through.

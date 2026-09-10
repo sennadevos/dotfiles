@@ -1,2 +1,10 @@
-{{- /* Shared with dsh (~/.dsh/AGENTS.md): edit .chezmoitemplates/AGENTS.md */ -}}
-{{- template "AGENTS.md" (dict "harness" "claude") -}}
+{{- /* Shared body: edit .chezmoitemplates/AGENTS-shared.md. To be shared with
+       hermes once that harness lands; NOT shared with dsh, which renders the
+       frozen .chezmoitemplates/AGENTS.md instead. Everything below the include
+       is Claude-only. */ -}}
+{{- template "AGENTS-shared.md" . }}
+# Compaction
+
+When compacting, always preserve the full list of modified files and any test
+commands. Never drop, merge or paraphrase them away: they cannot be recovered
+later, and the next session breaks without them.

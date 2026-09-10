@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+# chezmoi modify_ script: owns part of ~/.claude/settings.json.
+#
+# Why a modify_ script instead of tracking the file: `/model` writes the saved
+# default into this same file, so a fully tracked file would drift on every
+# model switch and trip the config-drift hook declared below. Leaving `model`
+# and `modelSettings` unowned means chezmoi never fights the model picker and
+# `chezmoi status` stays quiet, while permissions and the hooks -- which are
+# real configuration that has to reproduce on every machine -- still travel
+# with the dotfiles.
+#
+# chezmoi feeds the current target file on this script's stdin and takes its
+# stdout as the new contents, so every key not listed in OWNED passes through
+# byte for byte.
+#
+# Output format deliberately matches what Claude Code itself writes: indent of
+# 2, no ASCII escaping, and a single trailing newline. Note the difference from
+# modify_private_dot_claude.json.tmpl, which writes ~/.claude.json with NO
+# trailing newline -- both were verified by round-tripping the real files.
+# Getting this wrong means a permanent one-byte diff in `chezmoi status`.
+
+import json
+import sys
+
+HOOKS_DIR = "{{ .chezmoi.homeDir }}/.claude/hooks"
+
+# Keys chezmoi owns outright: replaced wholesale on every apply.
+#
+# defaultMode `auto` belongs here and only here -- the value has no effect from
+# a project-level settings file. Note that a `permissions.defaultMode` in
+# ~/.claude/settings.local.json overrides this one, so that key must stay
+# absent from the local file or the auto classifier is silently disabled.
+OWNED = {
+    "permissions": {
+        "allow": [
+            "Bash",
+            "Read",
+            "Write",
+            "Edit",
+            "MultiEdit",
+            "NotebookEdit",
+            "WebFetch",
+            "WebSearch",
+            "Bash(git:*)",
+            "Bash(gh:*)",
+            "Bash(distrobox:*)",
+            "Bash(podman:*)",
+            "Bash(idf.py:*)",
+            "Bash(ls:*)",
+            "Bash(cat:*)",
+            "Bash(mkdir:*)",
+            "Bash(rm:*)",
+            "Bash(cp:*)",
+            "Bash(mv:*)",
+            "Bash(grep:*)",
+            "Bash(sed:*)",
+            "Bash(python3:*)",
+            "Bash(node:*)",
+            "Bash(cmake:*)",
+            "Bash(ninja:*)",
+            # Standing approval for applying the dotfiles. Both spellings: the
+            # prefix form does not cover the bare command on its own. Only
+            # `apply` -- `chezmoi apply` renders the source into $HOME, which
+            # is the whole point of the repo, while the destructive verbs
+            # (forget, destroy, purge) keep prompting.
+            "Bash(chezmoi apply)",
+            "Bash(chezmoi apply:*)",
+        ],
+        "defaultMode": "auto",
+        "additionalDirectories": [
+            "/tmp",
+            "/var/home/sjdevos",
+            "/var/home/sjdevos/Desktop",
+            "/var/home/sjdevos/rator-ci",
+        ],
+    },
+    # The subagent tool was renamed Task -> Agent in v2.1.63 and `Task` still
+    # works as an alias, so the matcher accepts both. `Task|Agent` is the
+    # documented pipe-alternation form and is matched unanchored, so the guard
+    # script re-checks tool_name itself rather than trusting the matcher.
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Task|Agent",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": HOOKS_DIR + "/subagent-model-guard.py",
+                    }
+                ],
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": HOOKS_DIR + "/config-drift-notice.py",
+                    }
+                ],
+            }
+        ],
+    },
+    "tui": "fullscreen",
+    "theme": "dark",
+    "skipDangerousModePermissionPrompt": True,
+}
+
+raw = sys.stdin.read()
+
+if not raw.strip():
+    # Fresh machine: no settings.json yet.
+    data = {}
+else:
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Never destroy a file we cannot parse -- pass it through untouched and
+        # leave the declaration unapplied rather than clobbering real settings.
+        sys.stdout.write(raw)
+        sys.exit(0)
+
+if not isinstance(data, dict):
+    sys.stdout.write(raw)
+    sys.exit(0)
+
+data.update(OWNED)
+
+sys.stdout.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
