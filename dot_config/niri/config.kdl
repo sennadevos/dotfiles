@@ -380,6 +380,7 @@ binds {
     // kitty is installed via mise, which niri's PATH doesn't include.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "/home/sjdevos/.local/share/mise/shims/kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: noctalia" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Shift+V hotkey-overlay-title="Clipboard History: noctalia" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
     Mod+E hotkey-overlay-title="Open File Manager: thunar" { spawn "thunar"; }
     // Launches the exported desktop entry rather than the binary directly, so
     // the four load-bearing Chromium flags stay defined in exactly one place.
@@ -393,6 +394,16 @@ binds {
     // Spellcheck the word in the clipboard (EN + NL) and pick a correction back into it.
     Mod+Ctrl+S hotkey-overlay-title="Spellcheck Clipboard Word: spell-menu" { spawn "/home/sjdevos/.local/bin/spell-menu"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: glitched swaylock" { spawn "/home/sjdevos/.local/bin/glitch-lock"; }
+
+    // Animated variant (~/Desktop/glitch-lock). Kept on a separate key while it
+    // earns trust; Super+Alt+L stays on the known-good static locker above.
+    Super+Alt+K hotkey-overlay-title="Lock the Screen: animated glitch" { spawn "/home/sjdevos/.local/bin/glitch-lock-animated"; }
+
+    // Escape hatch for the animated locker: drops the animation and leaves a
+    // plain background on a lock that still takes your password. Needed because
+    // swaylock-plugin restarts its wallpaper child unconditionally, so killing
+    // wlsbg on its own just brings the animation straight back.
+    Super+Alt+Escape allow-when-locked=true hotkey-overlay-title="Lock: kill animation" { spawn "/home/sjdevos/.local/bin/glitch-lock-panic"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
@@ -611,8 +622,9 @@ binds {
     Mod+Shift+Equal { set-window-height "+10%"; }
 
     // Move the focused window between the floating and the tiling layout.
+    // Mod+Shift+V (switch-focus-between-floating-and-tiling) was dropped
+    // in favour of the noctalia clipboard bind up in the app-binds group.
     Mod+V       { toggle-window-floating; }
-    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
 
     // Toggle tabbed column display mode.
     // Windows in this column will appear as vertical tabs,
@@ -653,3 +665,5 @@ binds {
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
 }
+
+include "noctalia.kdl"
