@@ -37,3 +37,11 @@
 .local/bin/bw-menu
 .local/bin/pinentry-fuzzel
 .config/btop
+
+# Clipboard and wallpaper are both noctalia's own: it keeps an encrypted store
+# under .local/state/noctalia/clipboard and draws wallpapers from its own layer
+# surface, with no reference to either tool. swww was already uninstalled.
+.local/bin/cliphist
+.cache/cliphist
+.local/bin/swww
+.local/bin/swww-daemon
