@@ -18,8 +18,6 @@ pnpm = "latest"
 neovim = "latest"
 "github:marktext/marktext" = { version = "latest", postinstall = "~/.config/mise/tasks/extract-marktext-desktop.sh" }
 
-"github:r00tman/corrupter" = "latest"
-
 [settings]
 # dsh only has releases newer than mise's npm release-age cooldown; trust the
 # @deepseek-ai scope explicitly so it can install.

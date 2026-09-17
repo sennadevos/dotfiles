@@ -393,10 +393,13 @@ binds {
     Mod+Shift+D hotkey-overlay-title="kDrive Status: synthesis" { spawn "/home/sjdevos/.local/share/mise/shims/kdrive" "--synthesis"; }
     // Spellcheck the word in the clipboard (EN + NL) and pick a correction back into it.
     Mod+Ctrl+S hotkey-overlay-title="Spellcheck Clipboard Word: spell-menu" { spawn "/home/sjdevos/.local/bin/spell-menu"; }
-    Super+Alt+L hotkey-overlay-title="Lock the Screen: glitched swaylock" { spawn "/home/sjdevos/.local/bin/glitch-lock"; }
+    // frost is the content-hiding blur: a low-pass actually destroys the text,
+    // where the "open" looks only displace pixels and leave them all readable.
+    // Held at full strength at all times, so legibility never returns between
+    // bursts. This is the lock to use in company.
+    Super+Alt+L hotkey-overlay-title="Lock the Screen: blur (privacy)" { spawn "/home/sjdevos/.local/bin/glitch-lock-animated" "--preset" "frost"; }
 
-    // Animated variant (~/Desktop/glitch-lock). Kept on a separate key while it
-    // earns trust; Super+Alt+L stays on the known-good static locker above.
+    // Same locker, default preset: animated but deliberately NOT private.
     Super+Alt+K hotkey-overlay-title="Lock the Screen: animated glitch" { spawn "/home/sjdevos/.local/bin/glitch-lock-animated"; }
 
     // Escape hatch for the animated locker: drops the animation and leaves a

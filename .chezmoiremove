@@ -3,3 +3,8 @@
 .config/systemd/user/dsh-web-proxy.socket
 .config/systemd/user/dsh-web-proxy.service
 .config/systemd/user/sockets.target.wants/dsh-web-proxy.socket
+
+# corrupter-dependent lockers, removed with the corrupter tool itself.
+# glitch-lock ran the binary directly; lock.sh was its unbound predecessor.
+.local/bin/glitch-lock
+.local/bin/lock.sh
