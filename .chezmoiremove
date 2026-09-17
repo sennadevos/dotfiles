@@ -24,3 +24,16 @@
 .config/systemd/user/dsh-tunnel.service
 .config/systemd/user/graphical-session.target.wants/dsh-web.service
 .local/bin/dsh-web
+
+# Tools dropped with their run_once install scripts, plus the two scripts that
+# existed only to drive rbw: bw-menu was its fuzzel front-end and
+# pinentry-fuzzel served its Assuan prompts. Nothing else referenced either.
+.local/bin/btop
+.local/bin/dmenu
+.local/bin/dmenu_path
+.local/bin/dmenu_run
+.local/bin/rbw
+.local/bin/rbw-agent
+.local/bin/bw-menu
+.local/bin/pinentry-fuzzel
+.config/btop
