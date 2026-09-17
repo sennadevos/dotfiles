@@ -33,6 +33,17 @@ An ostree-booted, immutable Fedora with a read-only core OS image. Never
   bug.
 - **Native layering** onto the base image: only when there is no other way.
 
+# Browser: the real session, never an isolated one
+
+Drive the already-running containerised Chromium by attaching to it, and open
+pages as tabs in that session. Never launch a second instance, a fresh or
+temporary profile, or an incognito context.
+
+That browser holds the live logged-in sessions. Anything isolated starts with an
+empty profile, so it is signed in to nothing, and the task then fails in a way
+that looks like a broken page rather than the wrong browser. If it is not
+running, say so and ask — do not launch an isolated one to get unblocked.
+
 # Say what you do not know
 
 When context is missing, include only what you have verified, or ask. Never
