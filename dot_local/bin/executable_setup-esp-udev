@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Install the udev rule that grants the logged-in user access to ESP
+# serial devices (needed for flashing from the esp-idf distrobox).
+# Idempotent: safe to re-run; only rewrites the rule when it changed.
+set -euo pipefail
+
+RULE_PATH=/etc/udev/rules.d/70-esp-serial.rules
+
+rule() {
+	cat <<'EOF'
+# ESP device serial access — installed by ~/.local/bin/setup-esp-udev
+# TAG+="uaccess" grants the active logged-in user an ACL on the device,
+# which also covers rootless podman/distrobox (same UID inside the box).
+# Filename must sort before 73-seat-late.rules for uaccess to apply.
+
+# Espressif's own USB vendor ID (303a): native USB-Serial/JTAG and USB-CDC
+# on ESP32-S2/S3/C3/C6/H2 etc. This VID is genuinely ESP-only.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", TAG+="uaccess"
+
+# USB-UART bridge chips used on most classic ESP32/ESP8266 devkits.
+# CAVEAT: these are the bridge vendors' IDs (Silicon Labs, WCH), not
+# Espressif's — any device built on these chips matches, not only ESPs.
+# Remove these lines if you want strictly-ESP matching.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", TAG+="uaccess"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", TAG+="uaccess"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="55d4", TAG+="uaccess"
+EOF
+}
+
+if [ -f "$RULE_PATH" ] && rule | cmp -s - "$RULE_PATH"; then
+	echo "up to date: $RULE_PATH"
+	exit 0
+fi
+
+rule | sudo tee "$RULE_PATH" >/dev/null
+sudo udevadm control --reload
+sudo udevadm trigger --subsystem-match=tty
+echo "installed: $RULE_PATH (replug the board if it was connected)"
