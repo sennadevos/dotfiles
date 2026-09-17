@@ -23,3 +23,11 @@
 # Chromium PWA launchers are hand-made (Chromium in the apps distrobox cannot
 # run the host's xdg-desktop-menu integration), so nothing regenerates them.
 !/dot_local/share/applications/
+
+# Claude Code worktrees: live git worktrees of this same repo, created per
+# task under .claude/worktrees/. Scratch checkouts, never content.
+/.claude/
+
+# pnpm installs dsh plugin dependencies in place. The plugin's own source and
+# its lockfile travel with the repo; the 600-file dependency tree does not.
+/dot_dsh/plugins/*/node_modules/
