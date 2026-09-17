@@ -19,8 +19,7 @@
 # stays quiet instead of reporting a permanent diff.
 #
 # What it declares: chrome-devtools-mcp attached to the ALREADY-RUNNING
-# containerised Chromium on port 9222, the same setup the dsh web profile uses
-# (see .dsh/profiles/web/cordis.patch.yml). Attaching rather than launching is
+# containerised Chromium on port 9222. Attaching rather than launching is
 # the whole point: a launched instance gets an empty profile, while attaching
 # reaches the live logged-in sessions. The port is the one baked into the
 # exported desktop entry -- see distrobox/distrobox.ini under [apps], and note

@@ -2,8 +2,8 @@
 /dot_bashrc
 /dot_bashrc.d/
 # Claude Code state stays local, but the user instructions and skills are real
-# configuration shared with dsh through .chezmoitemplates/, so they travel
-# with the dotfiles.
+# configuration shared through .chezmoitemplates/, so they travel with the
+# dotfiles.
 /dot_claude/*
 !/dot_claude/CLAUDE.md.tmpl
 !/dot_claude/skills/
@@ -28,6 +28,3 @@
 # task under .claude/worktrees/. Scratch checkouts, never content.
 /.claude/
 
-# pnpm installs dsh plugin dependencies in place. The plugin's own source and
-# its lockfile travel with the repo; the 600-file dependency tree does not.
-/dot_dsh/plugins/*/node_modules/

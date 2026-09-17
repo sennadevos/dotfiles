@@ -8,3 +8,19 @@
 # glitch-lock ran the binary directly; lock.sh was its unbound predecessor.
 .local/bin/glitch-lock
 .local/bin/lock.sh
+
+# The dsh (DeepSeek) harness, retired. Its config is listed entry by entry
+# rather than as a bare `.dsh`, deliberately: ~/.dsh/sessions and
+# ~/.dsh/storages are conversation history and user data, not config, and a
+# blanket removal would take them too.
+.dsh/AGENTS.md
+.dsh/settings.yaml
+.dsh/product-subagents-registry.json
+.dsh/roles
+.dsh/profiles
+.dsh/plugins
+.dsh/skills
+.config/systemd/user/dsh-web.service
+.config/systemd/user/dsh-tunnel.service
+.config/systemd/user/graphical-session.target.wants/dsh-web.service
+.local/bin/dsh-web

@@ -1,5 +1,5 @@
 # drawio desktop, for viewing/editing .drawio files and for headless export
-# (`drawio --export --format png|svg|pdf`) used by the dsh drawio skill.
+# (`drawio --export --format png|svg|pdf`) used by the drawio skill.
 #
 # AppImage through the http backend, same shape as tools-kdrive.toml: keeps it
 # user-level and removable, with no rpm-ostree layering and no reboot.

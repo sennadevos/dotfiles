@@ -13,8 +13,8 @@ rediscover them:
   `mcpServers` key that `modify_private_dot_claude.json.tmpl` owns.
 - `/dot_claude/*` is gitignored with explicit `!` exceptions, so anything new
   under it needs its own exception or it will never leave this machine.
-- Secrets never enter this repo. `dot_dsh/settings.yaml` shows the pattern:
-  read the key from a local, gitignored credentials file at run time.
+- Secrets never enter this repo. Read a key from a local, gitignored file at
+  run time rather than committing it.
 
 ## Rator Airtable
 
