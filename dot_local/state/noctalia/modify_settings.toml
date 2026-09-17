@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+# chezmoi modify_ script: owns one key in ~/.local/state/noctalia/settings.toml.
+#
+# Why a modify_ script instead of tracking the file: noctalia rewrites this
+# file itself at runtime, and most of what it holds is machine-local -- the
+# per-output wallpaper mapping and the lockscreen widget pixel coordinates are
+# keyed on this machine's DP-2/DP-3/HDMI-A-1/eDP-1 and would be wrong anywhere
+# else. Tracking the whole file would both fight the shell and carry that
+# geometry onto other machines. Owning the single key keeps `chezmoi status`
+# quiet while the setting still reproduces on a reinstall.
+#
+# The key: noctalia 5.0 splits bar auto-hide into two independent settings.
+# `smart_auto_hide` only stops the bar being drawn; `reserve_space` (default
+# true) is what keeps the layer-shell exclusive zone. With reserve_space left
+# at its default, niri never hands the freed strip back and windows stay 34px
+# short under the hidden bar. Both keys must be set for auto-hide to actually
+# free the space.
+#
+# chezmoi feeds the current target file on this script's stdin and takes its
+# stdout as the new contents, so everything outside [bar.default] passes
+# through byte for byte.
+#
+# The edit is line-based on purpose: the stdlib can read TOML but cannot write
+# it, so a parse/re-serialise round trip would drop comments and reorder the
+# file, producing a permanent diff against what noctalia writes back. For the
+# same reason the key is inserted in alphabetical position within the table --
+# noctalia emits its keys sorted, so any other position would churn.
+
+import sys
+
+SECTION = "[bar.default]"
+KEY = "reserve_space"
+LINE = f"{KEY} = false"
+
+raw = sys.stdin.read()
+
+if not raw.strip():
+    # Fresh machine: noctalia has not written its settings yet. Leave the file
+    # empty rather than inventing a partial config -- noctalia writes a full
+    # default file on first run and the next apply adds the key to it.
+    sys.exit(0)
+
+lines = raw.split("\n")
+
+try:
+    start = next(i for i, l in enumerate(lines) if l.strip() == SECTION)
+except StopIteration:
+    # No [bar.default] table to edit. Pass the file through untouched rather
+    # than guessing where the table belongs.
+    sys.stdout.write(raw)
+    sys.exit(0)
+
+# End of the table: the next table header, or end of file.
+end = len(lines)
+for i in range(start + 1, len(lines)):
+    if lines[i].lstrip().startswith("["):
+        end = i
+        break
+
+body = lines[start + 1 : end]
+
+if any(l.split("=")[0].strip() == KEY for l in body):
+    # Already set -- replace the value, leaving position and spacing alone.
+    body = [LINE if l.split("=")[0].strip() == KEY else l for l in body]
+else:
+    # Insert before the first key that sorts after it, keeping the table in the
+    # alphabetical order noctalia writes.
+    pos = len(body)
+    for i, l in enumerate(body):
+        name = l.split("=")[0].strip()
+        if "=" in l and name and name > KEY:
+            pos = i
+            break
+        if l.strip() == "":
+            # Trailing blank line before the next table: insert above it.
+            pos = i
+            break
+    body.insert(pos, LINE)
+
+sys.stdout.write("\n".join(lines[: start + 1] + body + lines[end:]))
