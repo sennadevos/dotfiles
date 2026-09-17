@@ -7,9 +7,6 @@ rust = "stable"
 
 fzf = "latest"
 tmux = "latest"
-# mosh: no mise backend exists (upstream ships no binaries), so it comes from
-# conda-forge via pixi: `pixi global install mosh` (exposed in ~/.pixi/bin).
-pixi = "latest"
 
 gh = "latest"
 doctl = "latest"
@@ -20,6 +17,8 @@ pnpm = "latest"
 
 neovim = "latest"
 "github:marktext/marktext" = { version = "latest", postinstall = "~/.config/mise/tasks/extract-marktext-desktop.sh" }
+
+"github:r00tman/corrupter" = "latest"
 
 [settings]
 # dsh only has releases newer than mise's npm release-age cooldown; trust the
