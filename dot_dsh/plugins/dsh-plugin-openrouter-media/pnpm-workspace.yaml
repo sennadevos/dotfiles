@@ -1,0 +1,5 @@
+# Approve esbuild's postinstall so `pnpm install` never stalls on a prompt.
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild
